@@ -89,13 +89,13 @@
                             <Insets top="26" right="28" bottom="26" left="28"/>
                         </padding>
 
-                        <!-- Username -->
+                        <!-- Email -->
                         <VBox spacing="6">
-                            <Label text="Username" styleClass="field-label"/>
+                            <Label text="Email" styleClass="field-label"/>
                             <TextField
-                                fx:id="usernameField"
+                                fx:id="emailField"
                                 styleClass="field-input"
-                                promptText="Enter your username"
+                                promptText="Enter your email"
                                 onAction="#handleLogin"/>
                         </VBox>
 
