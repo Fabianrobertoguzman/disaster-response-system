@@ -1,0 +1,439 @@
+
+/* ================================================================
+   drs-styles.css  —  Disaster Response System
+   Theme : authoritative dark navy header, clean white content
+   ================================================================ */
+
+/* ── Root ──────────────────────────────────────────────────────── */
+.root-pane {
+    -fx-background-color: #f0f2f5;
+    -fx-font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    -fx-font-size: 13px;
+}
+
+/* ── Header ────────────────────────────────────────────────────── */
+.header-bar {
+    -fx-background-color: #0d1b2a;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.4), 8, 0, 0, 3);
+}
+
+.header-title {
+    -fx-text-fill: #ffffff;
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+}
+
+.header-subtitle {
+    -fx-text-fill: #7f9bb3;
+    -fx-font-size: 12px;
+}
+
+/* ── Footer ────────────────────────────────────────────────────── */
+.footer-bar {
+    -fx-background-color: #0d1b2a;
+}
+
+.footer-label {
+    -fx-text-fill: #7f9bb3;
+    -fx-font-size: 11px;
+}
+
+/* ── Main area ─────────────────────────────────────────────────── */
+.main-area {
+    -fx-background-color: #f0f2f5;
+}
+
+/* ── Action bar (holds the Report Disaster button) ─────────────── */
+.action-bar {
+    -fx-background-color: #ffffff;
+    -fx-background-radius: 8px;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.07), 6, 0, 0, 2);
+}
+
+.section-title {
+    -fx-text-fill: #0d1b2a;
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+}
+
+.section-subtitle {
+    -fx-text-fill: #7f9bb3;
+    -fx-font-size: 12px;
+}
+
+/* ── Report form panel ─────────────────────────────────────────── */
+.form-panel {
+    -fx-background-color: #ffffff;
+    -fx-background-radius: 8px;
+    -fx-border-color: #e2e8f0;
+    -fx-border-radius: 8px;
+    -fx-border-width: 1px;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.09), 10, 0, 0, 3);
+    -fx-padding: 0;
+}
+
+.form-header {
+    -fx-background-color: #f8fafc;
+    -fx-background-radius: 8px 8px 0px 0px;
+    -fx-border-color: transparent transparent #e2e8f0 transparent;
+    -fx-border-width: 0 0 1 0;
+}
+
+.form-title {
+    -fx-text-fill: #0d1b2a;
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+}
+
+.form-body {
+    -fx-background-color: #ffffff;
+}
+
+/* ── Field labels ──────────────────────────────────────────────── */
+.field-label {
+    -fx-text-fill: #374151;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+}
+
+/* ── Text input fields ─────────────────────────────────────────── */
+.field-input {
+    -fx-background-color: #f9fafb;
+    -fx-border-color: #d1d5db;
+    -fx-border-radius: 5px;
+    -fx-background-radius: 5px;
+    -fx-padding: 8px 12px;
+    -fx-font-size: 13px;
+    -fx-pref-height: 36px;
+}
+
+.field-input:focused {
+    -fx-border-color: #1a56db;
+    -fx-background-color: #ffffff;
+    -fx-effect: dropshadow(gaussian, rgba(26,86,219,0.2), 4, 0, 0, 0);
+}
+
+/* ── ComboBox ──────────────────────────────────────────────────── */
+.field-combo {
+    -fx-background-color: #f9fafb;
+    -fx-border-color: #d1d5db;
+    -fx-border-radius: 5px;
+    -fx-background-radius: 5px;
+    -fx-pref-height: 36px;
+    -fx-font-size: 13px;
+}
+
+.field-combo:focused {
+    -fx-border-color: #1a56db;
+    -fx-background-color: #ffffff;
+}
+
+.field-combo .list-cell {
+    -fx-padding: 4px 10px;
+}
+
+/* ── TextArea ──────────────────────────────────────────────────── */
+.field-textarea {
+    -fx-background-color: #f9fafb;
+    -fx-border-color: #d1d5db;
+    -fx-border-radius: 5px;
+    -fx-background-radius: 5px;
+    -fx-padding: 8px 12px;
+    -fx-font-size: 13px;
+    -fx-control-inner-background: #f9fafb;
+}
+
+.field-textarea:focused {
+    -fx-border-color: #1a56db;
+    -fx-control-inner-background: #ffffff;
+    -fx-effect: dropshadow(gaussian, rgba(26,86,219,0.2), 4, 0, 0, 0);
+}
+
+/* ── Primary button ────────────────────────────────────────────── */
+.btn-primary {
+    -fx-background-color: #c0392b;
+    -fx-text-fill: #ffffff;
+    -fx-font-weight: bold;
+    -fx-font-size: 13px;
+    -fx-padding: 9px 20px;
+    -fx-background-radius: 5px;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, rgba(192,57,43,0.3), 4, 0, 0, 2);
+}
+
+.btn-primary:hover {
+    -fx-background-color: #a93226;
+    -fx-effect: dropshadow(gaussian, rgba(192,57,43,0.5), 6, 0, 0, 3);
+}
+
+.btn-primary:pressed {
+    -fx-background-color: #922b21;
+    -fx-effect: none;
+}
+
+/* ── Secondary button ──────────────────────────────────────────── */
+.btn-secondary {
+    -fx-background-color: #ffffff;
+    -fx-text-fill: #374151;
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-padding: 9px 20px;
+    -fx-background-radius: 5px;
+    -fx-border-color: #d1d5db;
+    -fx-border-radius: 5px;
+    -fx-cursor: hand;
+}
+
+.btn-secondary:hover {
+    -fx-background-color: #f3f4f6;
+    -fx-border-color: #9ca3af;
+}
+
+.btn-secondary:pressed {
+    -fx-background-color: #e5e7eb;
+}
+
+/* ── Close (X) button in form header ───────────────────────────── */
+.btn-close {
+    -fx-background-color: transparent;
+    -fx-text-fill: #9ca3af;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-padding: 4px 8px;
+    -fx-background-radius: 4px;
+    -fx-cursor: hand;
+}
+
+.btn-close:hover {
+    -fx-background-color: #fee2e2;
+    -fx-text-fill: #c0392b;
+}
+
+/* ── Validation / success labels ───────────────────────────────── */
+.validation-label {
+    -fx-text-fill: #b91c1c;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-background-color: #fef2f2;
+    -fx-border-color: #fecaca;
+    -fx-border-radius: 4px;
+    -fx-background-radius: 4px;
+    -fx-padding: 8px 12px;
+}
+
+.success-label {
+    -fx-text-fill: #166534;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-background-color: #f0fdf4;
+    -fx-border-color: #bbf7d0;
+    -fx-border-radius: 4px;
+    -fx-background-radius: 4px;
+    -fx-padding: 8px 12px;
+}
+
+/* ── Table panel ───────────────────────────────────────────────── */
+.table-panel {
+    -fx-background-color: transparent;
+}
+
+.data-table {
+    -fx-background-color: #ffffff;
+    -fx-border-color: #e2e8f0;
+    -fx-border-radius: 8px;
+    -fx-background-radius: 8px;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.07), 6, 0, 0, 2);
+}
+
+.data-table .column-header-background {
+    -fx-background-color: #0d1b2a;
+    -fx-background-radius: 8px 8px 0 0;
+}
+
+.data-table .column-header .label {
+    -fx-text-fill: #ffffff;
+    -fx-font-weight: bold;
+    -fx-font-size: 12px;
+}
+
+.data-table .table-row-cell:odd {
+    -fx-background-color: #f8fafc;
+}
+
+.data-table .table-row-cell:even {
+    -fx-background-color: #ffffff;
+}
+
+.data-table .table-row-cell:selected {
+    -fx-background-color: #dbeafe;
+}
+
+.table-placeholder {
+    -fx-text-fill: #9ca3af;
+    -fx-font-style: italic;
+}
+
+/* ── Action button inside table rows ───────────────────────────── */
+.btn-action {
+    -fx-background-color: #1a56db;
+    -fx-text-fill: #ffffff;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-padding: 5px 12px;
+    -fx-background-radius: 4px;
+    -fx-cursor: hand;
+}
+
+.btn-action:hover {
+    -fx-background-color: #1e429f;
+}
+
+/* ── Assessment form ───────────────────────────────────────────── */
+.scroll-pane {
+    -fx-background-color: #f0f2f5;
+    -fx-background: #f0f2f5;
+}
+
+.assessment-form-body {
+    -fx-background-color: #f0f2f5;
+}
+
+/* ── Report summary card ───────────────────────────────────────── */
+.summary-card {
+    -fx-background-color: #ffffff;
+    -fx-border-color: #e2e8f0;
+    -fx-border-radius: 8px;
+    -fx-background-radius: 8px;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.06), 4, 0, 0, 2);
+}
+
+.card-title {
+    -fx-text-fill: #0d1b2a;
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+}
+
+.summary-label {
+    -fx-text-fill: #6b7280;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-min-width: 90px;
+}
+
+.summary-value {
+    -fx-text-fill: #111827;
+    -fx-font-size: 12px;
+}
+
+/* ── Priority score badge ──────────────────────────────────────── */
+.priority-score-badge {
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #6b7280;
+}
+
+/* ── Checkbox fields ───────────────────────────────────────────── */
+.field-checkbox {
+    -fx-font-size: 13px;
+    -fx-text-fill: #374151;
+}
+
+/* ── Field hint text ───────────────────────────────────────────── */
+.field-hint {
+    -fx-font-size: 11px;
+    -fx-text-fill: #9ca3af;
+    -fx-font-style: italic;
+}
+
+/* ── Multi-select ListViews ────────────────────────────────────── */
+.field-listview {
+    -fx-background-color: #f9fafb;
+    -fx-border-color: #d1d5db;
+    -fx-border-radius: 5px;
+    -fx-background-radius: 5px;
+    -fx-font-size: 12px;
+}
+
+.field-listview:focused {
+    -fx-border-color: #1a56db;
+}
+
+.field-listview .list-cell:selected {
+    -fx-background-color: #dbeafe;
+    -fx-text-fill: #1e429f;
+}
+
+/* ── Back button (inside header bar) ───────────────────────────── */
+.btn-back {
+    -fx-background-color: transparent;
+    -fx-text-fill: #7f9bb3;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-padding: 4px 0px;
+    -fx-cursor: hand;
+    -fx-underline: false;
+}
+
+.btn-back:hover {
+    -fx-text-fill: #ffffff;
+}
+
+/* ── Department view empty state ───────────────────────────────── */
+.empty-state-title {
+    -fx-text-fill: #9ca3af;
+    -fx-font-size: 14px;
+    -fx-font-style: italic;
+    -fx-padding: 40px 0 0 0;
+}
+
+/* ── Inline status ComboBox inside table rows ──────────────────── */
+.status-combo {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-font-size: 12px;
+    -fx-pref-height: 28px;
+    -fx-cursor: hand;
+}
+
+.status-combo:hover {
+    -fx-border-color: #d1d5db;
+    -fx-border-radius: 4px;
+    -fx-background-color: #f3f4f6;
+    -fx-background-radius: 4px;
+}
+
+.status-combo .list-cell {
+    -fx-padding: 2px 6px;
+}
+
+/* ── Priority Dashboard stat cards ─────────────────────────────── */
+.stat-card {
+    -fx-background-color: #ffffff;
+    -fx-border-color: #e2e8f0;
+    -fx-border-radius: 8px;
+    -fx-background-radius: 8px;
+    -fx-padding: 16px;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.07), 4, 0, 0, 2);
+}
+
+.stat-card-critical {
+    -fx-border-color: #fecaca;
+    -fx-background-color: #fff5f5;
+}
+
+.stat-card-high {
+    -fx-border-color: #fed7aa;
+    -fx-background-color: #fffaf5;
+}
+
+.stat-card-label {
+    -fx-text-fill: #6b7280;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+}
+
+.stat-card-value {
+    -fx-text-fill: #0d1b2a;
+    -fx-font-size: 28px;
+    -fx-font-weight: bold;
+}

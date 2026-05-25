@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane
+    styleClass="root-pane"
+    xmlns="http://javafx.com/javafx/17"
+    xmlns:fx="http://javafx.com/fxml/1"
+    fx:controller="com.coit20258.drs.controller.RegisterController">
+
+    <!-- HEADER -->
+    <top>
+        <HBox styleClass="header-bar" alignment="CENTER_LEFT" spacing="14">
+            <padding>
+                <Insets top="14" right="28" bottom="14" left="28"/>
+            </padding>
+            <Label text="🛡" style="-fx-font-size:24px;"/>
+            <VBox spacing="2" alignment="CENTER_LEFT">
+                <Label text="Disaster Response System" styleClass="header-title"/>
+                <Label text="Emergency Coordination Platform" styleClass="header-subtitle"/>
+            </VBox>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Button text="← Back to Login" styleClass="btn-back" onAction="#handleBackToLogin"/>
+        </HBox>
+    </top>
+
+    <!-- CENTRE -->
+    <center>
+        <ScrollPane fitToWidth="true" styleClass="scroll-pane" hbarPolicy="NEVER">
+            <StackPane styleClass="main-area">
+                <padding>
+                    <Insets top="36" right="40" bottom="36" left="40"/>
+                </padding>
+
+                <VBox alignment="TOP_CENTER" spacing="0">
+
+                    <!-- Page heading -->
+                    <VBox alignment="CENTER" spacing="4" style="-fx-padding:0 0 20 0;">
+                        <Label text="Create Your Account"
+                               style="-fx-font-size:22px; -fx-font-weight:bold; -fx-text-fill:#0d1b2a;"/>
+                        <Label text="Fill in the details below to register for the DRS"
+                               styleClass="section-subtitle"/>
+                    </VBox>
+
+                    <!-- Registration card -->
+                    <VBox styleClass="form-panel" minWidth="560" maxWidth="640" spacing="0">
+
+                        <!-- Card header -->
+                        <VBox styleClass="form-header" spacing="4">
+                            <padding>
+                                <Insets top="20" right="28" bottom="20" left="28"/>
+                            </padding>
+                            <HBox spacing="10" alignment="CENTER_LEFT">
+                                <Label text="📋" style="-fx-font-size:18px;"/>
+                                <VBox spacing="2">
+                                    <Label text="Account Registration" styleClass="form-title"/>
+                                    <Label text="All fields are required" styleClass="section-subtitle"/>
+                                </VBox>
+                            </HBox>
+                        </VBox>
+
+                        <!-- Card body -->
+                        <VBox styleClass="form-body" spacing="18">
+                            <padding>
+                                <Insets top="28" right="28" bottom="28" left="28"/>
+                            </padding>
+
+                            <!-- Section: Personal Information -->
+                            <VBox spacing="4">
+                                <Label text="PERSONAL INFORMATION"
+                                       style="-fx-text-fill:#9ca3af; -fx-font-size:11px; -fx-font-weight:bold;"/>
+                                <Separator/>
+                            </VBox>
+
+                            <!-- First Name / Last Name -->
+                            <GridPane hgap="16" vgap="0">
+                                <columnConstraints>
+                                    <ColumnConstraints hgrow="ALWAYS" percentWidth="50"/>
+                                    <ColumnConstraints hgrow="ALWAYS" percentWidth="50"/>
+                                </columnConstraints>
+
+                                <!-- First Name -->
+                                <VBox spacing="6" GridPane.columnIndex="0">
+                                    <Label text="First Name" styleClass="field-label"/>
+                                    <TextField fx:id="firstNameField" styleClass="field-input"
+                                               promptText="e.g. Jane"/>
+                                    <Label fx:id="firstNameError" styleClass="field-hint"
+                                           style="-fx-text-fill:#b91c1c;"
+                                           visible="false" managed="false"/>
+                                </VBox>
+
+                                <!-- Last Name -->
+                                <VBox spacing="6" GridPane.columnIndex="1">
+                                    <Label text="Last Name" styleClass="field-label"/>
+                                    <TextField fx:id="lastNameField" styleClass="field-input"
+                                               promptText="e.g. Smith"/>
+                                    <Label fx:id="lastNameError" styleClass="field-hint"
+                                           style="-fx-text-fill:#b91c1c;"
+                                           visible="false" managed="false"/>
+                                </VBox>
+                            </GridPane>
+
+                            <!-- Email -->
+                            <VBox spacing="6">
+                                <Label text="Email Address" styleClass="field-label"/>
+                                <TextField fx:id="emailField" styleClass="field-input"
+                                           promptText="your@email.com"/>
+                                <Label fx:id="emailError" styleClass="field-hint"
+                                       style="-fx-text-fill:#b91c1c;"
+                                       visible="false" managed="false"/>
+                            </VBox>
+
+                            <!-- Section: Security -->
+                            <VBox spacing="4" style="-fx-padding:6 0 0 0;">
+                                <Label text="SECURITY"
+                                       style="-fx-text-fill:#9ca3af; -fx-font-size:11px; -fx-font-weight:bold;"/>
+                                <Separator/>
+                            </VBox>
+
+                            <!-- Password / Confirm -->
+                            <GridPane hgap="16" vgap="0">
+                                <columnConstraints>
+                                    <ColumnConstraints hgrow="ALWAYS" percentWidth="50"/>
+                                    <ColumnConstraints hgrow="ALWAYS" percentWidth="50"/>
+                                </columnConstraints>
+
+                                <!-- Password -->
+                                <VBox spacing="6" GridPane.columnIndex="0">
+                                    <Label text="Password" styleClass="field-label"/>
+                                    <PasswordField fx:id="passwordField" styleClass="field-input"
+                                                   promptText="Min. 8 characters"/>
+                                    <Label fx:id="passwordError" styleClass="field-hint"
+                                           style="-fx-text-fill:#b91c1c;"
+                                           visible="false" managed="false"/>
+                                </VBox>
+
+                                <!-- Confirm Password -->
+                                <VBox spacing="6" GridPane.columnIndex="1">
+                                    <Label text="Confirm Password" styleClass="field-label"/>
+                                    <PasswordField fx:id="confirmPasswordField" styleClass="field-input"
+                                                   promptText="Re-enter your password"/>
+                                    <Label fx:id="confirmPasswordError" styleClass="field-hint"
+                                           style="-fx-text-fill:#b91c1c;"
+                                           visible="false" managed="false"/>
+                                </VBox>
+                            </GridPane>
+
+                            <Label text="💡  Use at least 8 characters with a mix of letters and numbers."
+                                   styleClass="field-hint"/>
+
+                            <!-- Section: Role -->
+                            <VBox spacing="4" style="-fx-padding:6 0 0 0;">
+                                <Label text="ACCOUNT TYPE"
+                                       style="-fx-text-fill:#9ca3af; -fx-font-size:11px; -fx-font-weight:bold;"/>
+                                <Separator/>
+                            </VBox>
+
+                            <VBox spacing="6">
+                                <Label text="Role" styleClass="field-label"/>
+                                <ComboBox fx:id="roleCombo" styleClass="field-combo" maxWidth="Infinity"/>
+                                <Label text="⚠  Admin and Operator roles require approval from an administrator."
+                                       styleClass="field-hint"/>
+                            </VBox>
+
+                            <!-- Global feedback banner -->
+                            <Label fx:id="feedbackLabel" styleClass="validation-label"
+                                   wrapText="true" managed="false" visible="false"/>
+
+                            <!-- Actions -->
+                            <HBox spacing="12" alignment="CENTER_RIGHT" style="-fx-padding:8 0 0 0;">
+                                <Button text="Clear Form" styleClass="btn-secondary" onAction="#handleClear"/>
+                                <Button fx:id="registerButton" text="Create Account"
+                                        styleClass="btn-primary" defaultButton="true"
+                                        onAction="#handleRegister"/>
+                            </HBox>
+
+                            <Separator/>
+
+                            <HBox alignment="CENTER" spacing="8">
+                                <Label text="Already have an account?" styleClass="section-subtitle"/>
+                                <Button text="Sign In" styleClass="btn-secondary"
+                                        onAction="#handleBackToLogin"/>
+                            </HBox>
+
+                        </VBox>
+                    </VBox>
+                </VBox>
+            </StackPane>
+        </ScrollPane>
+    </center>
+
+    <!-- FOOTER -->
+    <bottom>
+        <HBox styleClass="footer-bar" alignment="CENTER" spacing="16">
+            <padding>
+                <Insets top="10" bottom="10"/>
+            </padding>
+            <Label text="© 2026 Disaster Response System" styleClass="footer-label"/>
+            <Label text="|" styleClass="footer-label"/>
+            <Label text="v1.0 — DRS-Enhanced" styleClass="footer-label"/>
+        </HBox>
+    </bottom>
+
+</BorderPane>
