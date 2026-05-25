@@ -14,13 +14,11 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
-import javafx.util.StringConverter;
 
 import com.coit20258.drs.dao.UserDao;
 import com.coit20258.drs.dao.UserDaoImpl;
 import com.coit20258.drs.model.User;
-import com.coit20258.drs.model.User.Role;
-import com.coit20258.drs.util.PasswordUtil;
+import com.coit20258.drs.util.Security;
 import com.coit20258.drs.util.SceneManager;
 
 public class RegisterController implements Initializable {
@@ -34,9 +32,9 @@ public class RegisterController implements Initializable {
     private static final int MIN_PASSWORD_LENGTH = 8;
 
     @FXML
-    private TextField fullNameField;
+    private TextField firstNameField;
     @FXML
-    private TextField usernameField;
+    private TextField lastNameField;
     @FXML
     private TextField emailField;
     @FXML
@@ -44,13 +42,12 @@ public class RegisterController implements Initializable {
     @FXML
     private PasswordField confirmPasswordField;
     @FXML
-    private ComboBox<Role> roleCombo;
+    private ComboBox<String> roleCombo;
 
-    // Per-field inline error labels
     @FXML
-    private Label fullNameError;
+    private Label firstNameError;
     @FXML
-    private Label usernameError;
+    private Label lastNameError;
     @FXML
     private Label emailError;
     @FXML
@@ -58,7 +55,6 @@ public class RegisterController implements Initializable {
     @FXML
     private Label confirmPasswordError;
 
-    // Global feedback banner (success / top-level error)
     @FXML
     private Label feedbackLabel;
     @FXML
@@ -68,15 +64,16 @@ public class RegisterController implements Initializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        populateRoleCombo();
+        roleCombo.setItems(FXCollections.observableArrayList(
+                "Reporter",
+                "Operator",
+                "Admin"
+        ));
+        roleCombo.getSelectionModel().selectFirst();
+
         clearAllErrors();
 
         // Real-time uniqueness hints — fire on focus-lost to avoid spamming the DB
-        usernameField.focusedProperty().addListener((obs, wasFocused, isFocused) -> {
-            if (!isFocused) {
-                checkUsernameAvailability();
-            }
-        });
         emailField.focusedProperty().addListener((obs, wasFocused, isFocused) -> {
             if (!isFocused) {
                 checkEmailAvailability();
@@ -106,40 +103,31 @@ public class RegisterController implements Initializable {
         new Thread(() -> {
             try {
                 // ── Final uniqueness check on the DB thread ───────────────────
-                boolean usernameTaken = userDao.usernameExists(usernameField.getText().trim());
                 boolean emailTaken = userDao.emailExists(emailField.getText().trim());
 
-                if (usernameTaken || emailTaken) {
+                if (emailTaken) {
                     Platform.runLater(() -> {
                         registerButton.setDisable(false);
                         registerButton.setText("Create Account");
-                        if (usernameTaken) {
-                            showFieldError(usernameError,
-                                    "This username is already taken.");
-                        }
-                        if (emailTaken) {
-                            showFieldError(emailError,
-                                    "This email is already registered.");
-                        }
+                        showFieldError(emailError,
+                                "This email is already registered.");
                     });
                     return;
                 }
 
-                // ── Build and persist the user ────────────────────────────────
-                String hashedPassword = PasswordUtil.hash(passwordField.getText());
+                String roleConst = labelToRoleConstant(roleCombo.getValue());
 
                 User newUser = new User(
-                        usernameField.getText().trim(),
-                        hashedPassword,
-                        fullNameField.getText().trim(),
+                        firstNameField.getText().trim(),
+                        lastNameField.getText().trim(),
                         emailField.getText().trim().toLowerCase(),
-                        roleCombo.getValue()
+                        Security.hashPassword(passwordField.getText()),
+                        roleConst
                 );
 
                 userDao.register(newUser);
 
-                LOGGER.info("New user registered: " + newUser.getUsername()
-                        + " (id=" + newUser.getUserId() + ")");
+                LOGGER.info("New user registered: " + newUser.getEmail());
 
                 // ── Navigate back to login with a success message ─────────────
                 Platform.runLater(() -> {
@@ -147,7 +135,7 @@ public class RegisterController implements Initializable {
                             = SceneManager.switchToWithController("LoginView");
                     loginCtrl.showSuccess(
                             "✔  Account created! You can now sign in, "
-                            + newUser.getUsername() + ".");
+                            + newUser.getFirstName() + ".");
                 });
 
             } catch (Exception ex) {
@@ -161,13 +149,10 @@ public class RegisterController implements Initializable {
         }, "register-thread").start();
     }
 
-    /**
-     * Resets all form fields and error labels.
-     */
     @FXML
     private void handleClear() {
-        fullNameField.clear();
-        usernameField.clear();
+        firstNameField.clear();
+        lastNameField.clear();
         emailField.clear();
         passwordField.clear();
         confirmPasswordField.clear();
@@ -176,40 +161,23 @@ public class RegisterController implements Initializable {
         hideFeedback();
     }
 
-    /**
-     * Navigates back to the login screen without saving anything.
-     */
     @FXML
     private void handleBackToLogin() {
         SceneManager.switchTo("LoginView");
     }
 
-    /**
-     * Runs all field validators in order.
-     */
     private boolean validateAllFields() {
         boolean ok = true;
 
-        // Full name
-        if (fullNameField.getText().trim().isEmpty()) {
-            showFieldError(fullNameError, "Full name is required.");
-            ok = false;
-        } else if (fullNameField.getText().trim().length() < 2) {
-            showFieldError(fullNameError, "Full name must be at least 2 characters.");
+        // First name
+        if (firstNameField.getText().trim().length() < 2) {
+            showFieldError(firstNameError, "First name must be at least 2 characters.");
             ok = false;
         }
 
-        // Username
-        String username = usernameField.getText().trim();
-        if (username.isEmpty()) {
-            showFieldError(usernameError, "Username is required.");
-            ok = false;
-        } else if (username.length() < 3) {
-            showFieldError(usernameError, "Username must be at least 3 characters.");
-            ok = false;
-        } else if (!username.matches("[A-Za-z0-9_]+")) {
-            showFieldError(usernameError,
-                    "Only letters, numbers, and underscores allowed.");
+        // Last name
+        if (lastNameField.getText().trim().length() < 2) {
+            showFieldError(lastNameError, "Last name must be at least 2 characters.");
             ok = false;
         }
 
@@ -248,9 +216,6 @@ public class RegisterController implements Initializable {
         return ok;
     }
 
-    /**
-     * Checks that the confirm-password field matches the password field.
-     */
     private boolean validatePasswordMatch(boolean showIfBlank) {
         String pass = passwordField.getText();
         String confirm = confirmPasswordField.getText();
@@ -272,9 +237,6 @@ public class RegisterController implements Initializable {
         return true;
     }
 
-    /**
-     * Checks email availability on focus-lost.
-     */
     private void checkEmailAvailability() {
         String email = emailField.getText().trim();
         if (!EMAIL_PATTERN.matcher(email).matches()) {
@@ -293,35 +255,15 @@ public class RegisterController implements Initializable {
         }, "email-check-thread").start();
     }
 
-    private void populateRoleCombo() {
-        roleCombo.setItems(FXCollections.observableArrayList(Role.values()));
-
-        roleCombo.setConverter(new StringConverter<Role>() {
-            @Override
-            public String toString(Role role) {
-                if (role == null) {
-                    return "";
-                }
-                return switch (role) {
-                    case ADMIN ->
-                        "Administrator";
-                    case OPERATOR ->
-                        "Operator";
-                    case RESPONDER ->
-                        "Field Responder";
-                    case PUBLIC ->
-                        "Public / Civilian";
-                };
-            }
-
-            @Override
-            public Role fromString(String s) {
-                return null;
-            }  // not needed for ComboBox
-        });
-
-        // Default selection — most registrations will be PUBLIC
-        roleCombo.getSelectionModel().select(Role.PUBLIC);
+    private String labelToRoleConstant(String label) {
+        return switch (label) {
+            case "Operator" ->
+                User.ROLE_OPERATOR;
+            case "Admin" ->
+                User.ROLE_ADMIN;
+            default ->
+                User.ROLE_REPORTER;
+        };
     }
 
     private void showFieldError(Label errorLabel, String message) {
@@ -337,8 +279,8 @@ public class RegisterController implements Initializable {
     }
 
     private void clearAllErrors() {
-        hideFieldError(fullNameError);
-        hideFieldError(usernameError);
+        hideFieldError(firstNameError);
+        hideFieldError(lastNameError);
         hideFieldError(emailError);
         hideFieldError(passwordError);
         hideFieldError(confirmPasswordError);
