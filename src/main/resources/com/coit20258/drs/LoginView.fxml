@@ -23,7 +23,9 @@
     ════════════════════════════════════════════════════════════════ -->
     <top>
         <HBox styleClass="header-bar" alignment="CENTER_LEFT" spacing="14">
-            <padding><Insets top="14" right="28" bottom="14" left="28"/></padding>
+            <padding>
+                <Insets top="14" right="28" bottom="14" left="28"/>
+            </padding>
 
             <!-- Shield icon + branding -->
             <Label text="🛡" style="-fx-font-size:24px;"/>
@@ -48,7 +50,9 @@
     ════════════════════════════════════════════════════════════════ -->
     <center>
         <StackPane styleClass="main-area">
-            <padding><Insets top="40" right="40" bottom="40" left="40"/></padding>
+            <padding>
+                <Insets top="40" right="40" bottom="40" left="40"/>
+            </padding>
 
             <VBox alignment="CENTER" spacing="0">
 
@@ -66,7 +70,9 @@
 
                     <!-- Card header -->
                     <VBox styleClass="form-header" spacing="4">
-                        <padding><Insets top="22" right="28" bottom="22" left="28"/></padding>
+                        <padding>
+                            <Insets top="22" right="28" bottom="22" left="28"/>
+                        </padding>
                         <HBox spacing="10" alignment="CENTER_LEFT">
                             <Label text="🔐" style="-fx-font-size:20px;"/>
                             <VBox spacing="2">
@@ -79,7 +85,9 @@
 
                     <!-- Card body -->
                     <VBox styleClass="form-body" spacing="18">
-                        <padding><Insets top="26" right="28" bottom="26" left="28"/></padding>
+                        <padding>
+                            <Insets top="26" right="28" bottom="26" left="28"/>
+                        </padding>
 
                         <!-- Username -->
                         <VBox spacing="6">
@@ -141,7 +149,9 @@
     ════════════════════════════════════════════════════════════════ -->
     <bottom>
         <HBox styleClass="footer-bar" alignment="CENTER" spacing="16">
-            <padding><Insets top="10" bottom="10"/></padding>
+            <padding>
+                <Insets top="10" bottom="10"/>
+            </padding>
             <Label text="© 2026 Disaster Response System" styleClass="footer-label"/>
             <Label text="|" styleClass="footer-label"/>
             <Label text="v1.0 — DRS-Enhanced" styleClass="footer-label"/>
