@@ -74,6 +74,25 @@ public class Database {
                     + "  PRIMARY KEY (id)"
                     + ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
             );
+
+            // -----------------------------------------------------------------
+            // 2. disaster_reports
+            // -----------------------------------------------------------------
+            stmt.executeUpdate(
+                    "CREATE TABLE IF NOT EXISTS disaster_reports ("
+                    + "  id             INT          NOT NULL AUTO_INCREMENT, "
+                    + "  disasterType   VARCHAR(100) NOT NULL, "
+                    + "  location       VARCHAR(255) NOT NULL, "
+                    + "  severityLevel  VARCHAR(20)  NOT NULL, "
+                    + "  description    TEXT, "
+                    + "  status         VARCHAR(50)  NOT NULL DEFAULT 'REPORTED', "
+                    + "  reportedById   INT          NOT NULL, "
+                    + "  reportedAt     TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP, "
+                    + "  PRIMARY KEY (id), "
+                    + "  CONSTRAINT fk_report_user FOREIGN KEY (reportedById) "
+                    + "    REFERENCES users(id) ON DELETE RESTRICT"
+                    + ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
+            );
         }
     }
 }
