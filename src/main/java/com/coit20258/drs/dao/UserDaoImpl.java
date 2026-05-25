@@ -124,13 +124,14 @@ public class UserDaoImpl implements UserDao {
 
         return new User(
                 rs.getInt("id"),
-                rs.getString("email"),
-                rs.getString("passwordHash"),
                 rs.getString("firstName"),
                 rs.getString("lastName"),
+                rs.getString("email"),
+                rs.getString("passwordHash"),
                 rs.getString("role"),
                 rs.getBoolean("isActive"),
-                createdAt != null ? createdAt.toLocalDateTime() : null
+                createdAt != null ? createdAt.toLocalDateTime() : null,
+                null
         );
     }
 }
