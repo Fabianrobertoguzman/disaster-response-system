@@ -15,6 +15,7 @@ import javafx.scene.control.TextField;
 import com.coit20258.drs.dao.UserDao;
 import com.coit20258.drs.dao.UserDaoImpl;
 import com.coit20258.drs.model.User;
+import com.coit20258.drs.util.SceneManager;
 
 public class LoginController implements Initializable {
 
@@ -34,7 +35,7 @@ public class LoginController implements Initializable {
         this.hideFeedback();
 
         // Move focus to password when Enter is pressed in the username field
-        emailField.setOnAction(e -> passwordField.requestFocus());
+        // emailField.setOnAction(e -> passwordField.requestFocus());
     }
 
     /**
@@ -74,7 +75,7 @@ public class LoginController implements Initializable {
                     loginButton.setText("Sign In");
 
                     if (result.isPresent()) {
-                        onLoginSuccess(result.get());
+//                        onLoginSuccess(result.get());
                     } else {
                         onLoginFailure();
                     }
@@ -93,10 +94,10 @@ public class LoginController implements Initializable {
     /**
      * Navigates to the registration screen.
      */
-//    @FXML
-//    private void handleGoToRegister() {
-//        SceneManager.switchTo("RegisterView");
-//    }
+   @FXML
+   private void handleGoToRegister() {
+       SceneManager.switchTo("RegisterView");
+   }
 
     /**
      * Stores the user in the session and routes to the appropriate dashboard
