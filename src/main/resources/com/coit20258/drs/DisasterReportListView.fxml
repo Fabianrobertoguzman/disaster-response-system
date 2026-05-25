@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<!--
+    DisasterReportListView.fxml
+    Content view — loaded into AppShellView's contentArea.
+    No sidebar or footer (those live in the shell).
+    Controller: com.coit20258.drs.controller.DisasterReportListController
+-->
+<VBox
+    xmlns:fx="http://javafx.com/fxml/1"
+    fx:controller="com.coit20258.drs.controller.DisasterReportListController">
+
+    <!-- ── Content header ───────────────────────────────────────── -->
+    <HBox styleClass="content-header" alignment="CENTER_LEFT" spacing="16">
+        <VBox spacing="0" HBox.hgrow="ALWAYS">
+            <Label text="Disaster Reports" styleClass="content-header-title"/>
+            <Label text="Submit, review, and track disaster incidents in real time."
+                   styleClass="content-header-subtitle"/>
+        </VBox>
+        <Button text="+ New Report"
+                styleClass="btn-primary"
+                onAction="#handleNewReport"/>
+    </HBox>
+
+    <!-- ── Banner (success / error, hidden by default) ──────────── -->
+    <Label fx:id="bannerLabel"
+           wrapText="true"
+           managed="false" visible="false"
+           style="-fx-padding:8 28 8 28;"/>
+
+    <!-- ── Table ────────────────────────────────────────────────── -->
+    <VBox VBox.vgrow="ALWAYS" styleClass="content-body">
+        <TableView fx:id="reportsTable"
+                   VBox.vgrow="ALWAYS"
+                   styleClass="data-table">
+            <columns>
+                <TableColumn fx:id="colType"       text="Type"         prefWidth="120"/>
+                <TableColumn fx:id="colLocation"   text="Location"     prefWidth="190"/>
+                <TableColumn fx:id="colSeverity"   text="Severity"     prefWidth="90"/>
+                <TableColumn fx:id="colStatus"     text="Status"       prefWidth="155"/>
+                <TableColumn fx:id="colReportedBy" text="Reported By"  prefWidth="140"/>
+                <TableColumn fx:id="colReportedAt" text="Date / Time"  prefWidth="140"/>
+                <TableColumn fx:id="colAction"     text="Action"       prefWidth="150"/>
+            </columns>
+            <placeholder>
+                <Label text="No disaster reports yet. Click '+ New Report' to submit one."
+                       styleClass="table-placeholder"/>
+            </placeholder>
+        </TableView>
+    </VBox>
+
+</VBox>
