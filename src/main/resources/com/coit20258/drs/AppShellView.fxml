@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<!--
+    AppShellView.fxml
+    Persistent application shell: sidebar (via fx:include) + dynamic content
+    area + footer. Loaded once after login; only the content area swaps.
+    Controller: com.coit20258.drs.controller.AppShellController
+-->
+<BorderPane
+    xmlns:fx="http://javafx.com/fxml/1"
+    fx:controller="com.coit20258.drs.controller.AppShellController"
+    prefWidth="1100" prefHeight="720">
+
+    <!-- ── Sidebar (loaded once, persists across all content views) ── -->
+    <left>
+        <fx:include fx:id="sidebar" source="SidebarView.fxml"/>
+    </left>
+
+    <!-- ── Dynamic content area ─────────────────────────────────────── -->
+    <center>
+        <!--
+            StackPane fills all remaining space. AppShellController swaps
+            its single child whenever SceneManager.switchContent() is called.
+        -->
+        <StackPane fx:id="contentArea" styleClass="main-area"/>
+    </center>
+
+    <!-- ── Footer ───────────────────────────────────────────────────── -->
+    <bottom>
+        <HBox styleClass="footer-bar" alignment="CENTER" spacing="16">
+            <padding>
+                <Insets top="10" bottom="10"/>
+            </padding>
+            <Label text="© 2026 Disaster Response System" styleClass="footer-label"/>
+            <Label text="|" styleClass="footer-label"/>
+            <Label text="v1.0 — DRS-Enhanced" styleClass="footer-label"/>
+        </HBox>
+    </bottom>
+
+</BorderPane>
