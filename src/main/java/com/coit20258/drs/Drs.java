@@ -16,7 +16,7 @@ public class Drs extends Application {
     public void start(Stage primaryStage) {
         LOGGER.info("DRS-Enhanced starting up...");
  
-//        Database.boot();
+        Database.boot();
         SceneManager.init(primaryStage, 1100, 720); 
         SceneManager.switchTo("LoginView");
  

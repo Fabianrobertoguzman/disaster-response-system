@@ -5,6 +5,8 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
 
+import io.github.cdimascio.dotenv.Dotenv;
+
 public class Database {
 
     private static String jdbcUrl;
@@ -27,17 +29,19 @@ public class Database {
     public static Connection getConnection() throws SQLException {
         if (jdbcUrl == null) {
             throw new IllegalStateException(
-                    "DatabaseUtil has not been initialised. Call DatabaseUtil.boot() first.");
+                    "Database has not been initialised. Call DatabaseUtil.boot() first.");
         }
         return DriverManager.getConnection(jdbcUrl, dbUser, dbPassword);
     }
 
     private static void resolveConfig() {
-        String host = getEnvOrDefault("DRS_DB_HOST", "localhost");
-        String port = getEnvOrDefault("DRS_DB_PORT", "3306");
-        String name = getEnvOrDefault("DRS_DB_NAME", "drs_db");
-        dbUser = getEnvOrDefault("DRS_DB_USER", "root");
-        dbPassword = getEnvOrDefault("DRS_DB_PASS", "pass");
+        Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
+
+        String host = dotenv.get("DB_HOST", "localhost");
+        String port = dotenv.get("DB_PORT", "3306");
+        String name = dotenv.get("DB_NAME", "drs_db");
+        dbUser = dotenv.get("DB_USER", "root");
+        dbPassword = dotenv.get("DB_PASS", "pass");
 
         // Extra JDBC options improve reliability:
         //   useSSL=false            — disable SSL for local dev (set to true in prod)
@@ -47,11 +51,6 @@ public class Database {
                 "jdbc:mysql://%s:%s/%s?useSSL=false&allowPublicKeyRetrieval=true"
                 + "&serverTimezone=UTC&characterEncoding=UTF-8",
                 host, port, name);
-    }
-
-    private static String getEnvOrDefault(String key, String defaultValue) {
-        String value = System.getenv(key);
-        return (value != null && !value.isBlank()) ? value.trim() : defaultValue;
     }
 
     private static void createTables(Connection conn) throws SQLException {
