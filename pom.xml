@@ -5,12 +5,12 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>edu.cqu.drs</groupId>
-    <artifactId>drs-initial</artifactId>
-    <version>1.0.0</version>
+    <artifactId>drs-enhanced</artifactId>
+    <version>2.0.0</version>
     <packaging>jar</packaging>
 
-    <name>DRS-Initial</name>
-    <description>Disaster Response System — Initial prototype (COIT20258 Assessment 2). MVC/MVP-driven JavaFX Scene Builder desktop application. Fabian Roberto Guzman, 12287570.</description>
+    <name>DRS-Enhanced</name>
+    <description>Disaster Response System — Enhanced prototype (COIT20258 Assessment 3). Distributed three-tier application: a JavaFX Scene Builder client, a multi-threaded server, and a MySQL database. Built on the selected DRS-Initial baseline.</description>
 
     <properties>
         <!-- Toolchain: Java 17 + JavaFX 17.0.6 (LTS). JavaFX 17 satisfies Assessment 1's NFR-O01
@@ -21,6 +21,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <junit.jupiter.version>5.3.1</junit.jupiter.version>
         <javafx.version>17.0.6</javafx.version>
+        <mysql.connector.version>8.3.0</mysql.connector.version>
         <!-- Main class. LAUNCH the GUI with `mvn javafx:run` (the javafx-maven-plugin puts the JavaFX
              modules on the module-path). A plain `exec:java` / NetBeans "Run Project" fails with
              "JavaFX runtime components are missing" because JavaFX 11+ is a separate dependency, not part of the JDK. -->
@@ -58,6 +59,13 @@
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-fxml</artifactId>
             <version>${javafx.version}</version>
+        </dependency>
+
+        <!-- MySQL JDBC driver for the data tier (Assessment 3). -->
+        <dependency>
+            <groupId>com.mysql</groupId>
+            <artifactId>mysql-connector-j</artifactId>
+            <version>${mysql.connector.version}</version>
         </dependency>
     </dependencies>
 
