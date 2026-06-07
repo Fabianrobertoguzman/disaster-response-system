@@ -1,5 +1,6 @@
 package edu.cqu.drs.model;
 
+import java.io.Serializable;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -12,7 +13,10 @@ import java.util.UUID;
  *
  * @author Fabian Roberto Guzman (12287570)
  */
-public class Resource {
+public class Resource implements Serializable {
+
+    /** Serialisation version (resources travel over the client/server protocol). */
+    private static final long serialVersionUID = 1L;
 
     /** Immutable unique identifier. */
     private final UUID id;

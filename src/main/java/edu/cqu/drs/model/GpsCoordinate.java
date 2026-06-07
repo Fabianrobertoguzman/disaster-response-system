@@ -1,5 +1,7 @@
 package edu.cqu.drs.model;
 
+import java.io.Serializable;
+
 /**
  * An immutable WGS-84 geographic coordinate (latitude/longitude in decimal degrees).
  *
@@ -10,7 +12,10 @@ package edu.cqu.drs.model;
  *
  * @author Fabian Roberto Guzman (12287570)
  */
-public final class GpsCoordinate {
+public final class GpsCoordinate implements Serializable {
+
+    /** Serialisation version (coordinates travel inside incidents over the protocol). */
+    private static final long serialVersionUID = 1L;
 
     /** Minimum valid latitude in decimal degrees. */
     public static final double MIN_LATITUDE = -90.0;

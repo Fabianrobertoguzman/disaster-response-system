@@ -33,6 +33,18 @@ mvn javafx:run           # launch the client (use the javafx-maven-plugin goal, 
 - **Schema and reference data** ship as SQL scripts at `src/main/resources/db/schema.sql` and `src/main/resources/db/seed.sql`. They are applied programmatically at start-up (the schema is dropped and recreated so a stale database cannot keep old definitions), and can also be run by hand to inspect or set up the database. A bundled copy of `db.properties` is also packaged on the classpath as a last-resort default, so the project compiles and runs from a clean extract on a fresh machine.
 - The JUnit suite contains DAO integration tests that exercise real JDBC; when no MySQL server is reachable they are **skipped** (not failed), so `mvn test` still produces a green build on a database-free machine.
 
+### Running the distributed system (server + client)
+
+The enhanced system is two processes. Start the server first, then one or more clients:
+
+1. **Start MySQL** (see *Database setup* above).
+2. **Start the server** — it applies the schema/seed and listens on a TCP port (default `5599`):
+   - In NetBeans: right-click `DrsServerLauncher.java` → **Run File**; or
+   - On the command line: `mvn exec:java -Dexec.mainClass=edu.cqu.drs.server.DrsServerLauncher` (a port may be passed as the first argument).
+3. **Start a client**: `mvn javafx:run` (or run `App` from NetBeans). The client reaches the server through `edu.cqu.drs.client.ServerStub`; launch it more than once to see concurrent multi-client dispatch.
+
+The client/server protocol lives in the shared `edu.cqu.drs.protocol` package; the multi-threaded server (`edu.cqu.drs.server.DrsServer`) serves one pooled `ClientHandler` per connection.
+
 ## What carries over from Assessments 1 and 2
 
 Domain model (Incident, IncidentQueue, Responder, Resource, User/UserRole, AuditLog, GpsCoordinate, AlertTemplate, the enums, IPartnerAgency + 8 stubs), the MVP structure, the 95-test JUnit suite, the A1 use-case/sequence/class diagrams, and the A1 requirements register.

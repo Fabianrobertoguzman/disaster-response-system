@@ -1,6 +1,7 @@
 package edu.cqu.drs.data;
 
 import java.sql.Connection;
+import java.sql.DriverManager;
 
 /**
  * Shared support for the data-access integration tests.
@@ -33,6 +34,9 @@ final class DatabaseTestSupport {
      */
     static synchronized boolean available() {
         if (available == null) {
+            // Bound the probe so a machine with a different/firewalled MySQL on
+            // 3306 makes the DAO specs skip quickly instead of hanging the build.
+            DriverManager.setLoginTimeout(3);
             try (Connection connection = new Database().getConnection()) {
                 available = connection != null;
             } catch (Exception ex) {

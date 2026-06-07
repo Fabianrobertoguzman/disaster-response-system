@@ -14,7 +14,7 @@
 
     <properties>
         <!-- Toolchain: Java 17 + JavaFX 17.0.6 (LTS). JavaFX 17 satisfies Assessment 1's NFR-O01
-             ("JavaFX 17+ ... Scene Builder") and runs cleanly on JDK 11, 17, 19 and 21. JUnit 5.3.1
+             ("JavaFX 17+ ... Scene Builder"); the project is built and tested on JDK 17. JUnit 5.3.1
              and Surefire 2.22.2 are the JUnit 5 combo used in the Week-6 testing workshop. -->
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>

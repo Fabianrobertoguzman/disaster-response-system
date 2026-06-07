@@ -1,5 +1,6 @@
 package edu.cqu.drs.data;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -17,7 +18,10 @@ import java.util.UUID;
  *
  * @author Fabian Roberto Guzman (12287570)
  */
-public final class AuditEntry {
+public final class AuditEntry implements Serializable {
+
+    /** Serialisation version (audit entries travel over the client/server protocol). */
+    private static final long serialVersionUID = 1L;
 
     /** The acting user's domain id, or null if the action had no specific actor. */
     private final UUID actorUuid;

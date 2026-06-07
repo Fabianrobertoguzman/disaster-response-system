@@ -1,5 +1,6 @@
 package edu.cqu.drs.model;
 
+import java.io.Serializable;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -13,7 +14,10 @@ import java.util.UUID;
  *
  * @author Fabian Roberto Guzman (12287570)
  */
-public class User {
+public class User implements Serializable {
+
+    /** Serialisation version (users travel over the client/server protocol). */
+    private static final long serialVersionUID = 1L;
 
     /** Immutable unique identifier. */
     private final UUID id;
@@ -35,6 +39,28 @@ public class User {
         requireNonBlankUsername(username);
         requireNonNullRole(role);
         this.id = UUID.randomUUID();
+        this.username = username;
+        this.role = role;
+    }
+
+    /**
+     * Reconstruction constructor used only by the persistence tier to rebuild a
+     * user from a stored database row, preserving the persisted identity rather
+     * than generating a new one.
+     *
+     * @param id       the persisted identifier (must not be null).
+     * @param username the login name (must not be null or blank).
+     * @param role     the assigned role (must not be null).
+     * @throws IllegalArgumentException if {@code id} is null, {@code username} is
+     *         null or blank, or {@code role} is null.
+     */
+    public User(UUID id, String username, UserRole role) {
+        requireNonBlankUsername(username);
+        requireNonNullRole(role);
+        if (id == null) {
+            throw new IllegalArgumentException("id is required to reconstruct a user");
+        }
+        this.id = id;
         this.username = username;
         this.role = role;
     }

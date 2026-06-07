@@ -1,5 +1,6 @@
 package edu.cqu.drs.model;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -17,7 +18,10 @@ import java.util.List;
  *
  * @author Fabian Roberto Guzman (12287570)
  */
-public class AuditLog {
+public class AuditLog implements Serializable {
+
+    /** Serialisation version (an incident's audit log travels with it over the protocol). */
+    private static final long serialVersionUID = 1L;
 
     /** Chronological list of timestamped entry strings. */
     private final List<String> entries;

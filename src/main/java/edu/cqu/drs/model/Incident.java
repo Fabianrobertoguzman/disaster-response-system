@@ -1,5 +1,6 @@
 package edu.cqu.drs.model;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -18,7 +19,10 @@ import java.util.UUID;
  *
  * @author Fabian Roberto Guzman (12287570)
  */
-public class Incident {
+public class Incident implements Serializable {
+
+    /** Serialisation version (incidents travel over the client/server protocol). */
+    private static final long serialVersionUID = 1L;
 
     /** Maximum number of {@link Responder}s that may be assigned to a single incident. */
     public static final int MAX_RESPONDERS = 8;
