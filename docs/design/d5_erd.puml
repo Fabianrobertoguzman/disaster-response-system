@@ -1,0 +1,102 @@
+@startuml d5_erd
+' Author: Fabian Roberto Guzman (12287570)
+title DRS-Enhanced - D5 Entity-Relationship Diagram (MySQL schema)
+
+skinparam linetype ortho
+hide circle
+
+' Every table has a database-generated BIGINT AUTO_INCREMENT surrogate key (PK)
+' plus a CHAR(36) uuid that carries the domain identity (Assessment 3 section 2.4).
+
+entity users {
+  * id : BIGINT <<PK, auto>>
+  --
+  * uuid : CHAR(36) <<unique>>
+  * username : VARCHAR(64) <<unique>>
+  * role : VARCHAR(32)
+  * password_hash : VARCHAR(255)
+  * salt : VARCHAR(64)
+  * created_at : DATETIME
+}
+
+entity incidents {
+  * id : BIGINT <<PK, auto>>
+  --
+  * uuid : CHAR(36) <<unique>>
+  * hazard_type : VARCHAR(32)
+  * severity : VARCHAR(16)
+  * status : VARCHAR(16)
+  * latitude : DOUBLE
+  * longitude : DOUBLE
+  description : TEXT  '' AES-GCM encrypted at rest
+  * victim_count : INT
+  * reported_at : DATETIME
+  recommended_template : VARCHAR(32)
+  reported_by : BIGINT <<FK users.id>>
+}
+
+entity responders {
+  * id : BIGINT <<PK, auto>>
+  --
+  * uuid : CHAR(36) <<unique>>
+  * name : VARCHAR(128)
+  current_tasking_id : BIGINT <<FK incidents.id>>
+}
+
+entity resources {
+  * id : BIGINT <<PK, auto>>
+  --
+  * uuid : CHAR(36) <<unique>>
+  * resource_type : VARCHAR(64)
+  * available : BOOLEAN
+}
+
+entity partner_agencies {
+  * id : BIGINT <<PK, auto>>
+  --
+  * name : VARCHAR(128) <<unique>>
+  * available_units : INT
+}
+
+entity incident_responders {
+  * incident_id : BIGINT <<PK, FK incidents.id>>
+  * responder_id : BIGINT <<PK, FK responders.id>>
+  --
+  * assigned_at : DATETIME
+}
+
+entity notifications {
+  * id : BIGINT <<PK, auto>>
+  --
+  * incident_id : BIGINT <<FK incidents.id>>
+  * agency_id : BIGINT <<FK partner_agencies.id>>
+  * ack_status : VARCHAR(16)
+  * retries : INT
+  * ts : DATETIME
+}
+
+entity audit_log {
+  * id : BIGINT <<PK, auto>>
+  --
+  actor_id : BIGINT <<FK users.id>>
+  incident_id : BIGINT <<FK incidents.id>>
+  * action : VARCHAR(255)
+  entity : VARCHAR(64)
+  entity_uuid : CHAR(36)
+  * ts : DATETIME  '' server-assigned (section 2.5 time stamping)
+}
+
+users ||--o{ incidents : "reports"
+users ||--o{ audit_log : "acts in"
+incidents ||--o{ audit_log : "is subject of"
+incidents ||--o{ incident_responders
+responders ||--o{ incident_responders
+responders }o--o| incidents : "current tasking"
+incidents ||--o{ notifications
+partner_agencies ||--o{ notifications
+
+note bottom of incident_responders
+  Composite PK (incident_id, responder_id)
+  enforces no duplicate allocation.
+end note
+@enduml

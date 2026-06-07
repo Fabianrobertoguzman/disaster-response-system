@@ -1,0 +1,139 @@
+@startuml d3_class_diagram
+' Author: Fabian Roberto Guzman (12287570)
+title DRS-Enhanced - D3 Class Diagram (key classes by tier)
+
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+hide empty members
+
+package protocol {
+  enum Action
+  enum Status
+  class Request {
+    -action : Action
+    -token : String
+    -params : Map
+    +with(key, value) : Request
+  }
+  class Response {
+    -status : Status
+    -payload : Serializable
+    +ok(payload) : Response
+    +unauthorized(msg) : Response
+  }
+}
+
+package model {
+  class Incident {
+    -id : UUID
+    -severity : Severity
+    -status : IncidentStatus
+    +triage(Severity)
+    +assignResponder(Responder)
+  }
+  class Responder
+  class Resource
+  class User {
+    -id : UUID
+    -role : UserRole
+  }
+  enum Severity
+  enum IncidentStatus
+  enum UserRole
+}
+
+package data {
+  interface IncidentDao
+  interface ResponderDao
+  interface AuditDao
+  interface UserDao
+  class Database {
+    +getConnection() : Connection
+    +initialise()
+  }
+  class IncidentDaoImpl
+  class InMemoryDataStore {
+    +incidentDao() : IncidentDao
+    +responderDao() : ResponderDao
+    +resourceDao() : ResourceDao
+    +auditDao() : AuditDao
+    +userDao() : UserDao
+  }
+  class "InMemoryDataStore::*View\n(inner views)" as InMemViews
+  class StoredUser
+  class AuditEntry
+}
+
+package "server / service" as serverpkg {
+  class DrsServer {
+    +start()
+    +stop()
+  }
+  class ClientHandler
+  interface RequestDispatcher
+  class DrsRequestDispatcher
+  class IncidentService {
+    +submitIncident(...)
+    +triage(...)
+    +assignResponder(...)
+  }
+}
+
+package security {
+  class AuthService {
+    +register(...)
+    +login(...) : String
+    +requireRole(token, roles) : User
+  }
+  class PasswordHasher
+  class FieldCipher
+  class Session
+}
+
+package client {
+  class ServerStub {
+    +login(...) : Session
+    +submitIncident(...) : Incident
+    +listIncidents() : List
+  }
+  class LoginPresenter
+}
+
+' relationships
+IncidentDaoImpl ..|> IncidentDao
+IncidentDaoImpl --> Database
+InMemoryDataStore +-- InMemViews : creates
+InMemViews ..|> IncidentDao
+InMemViews ..|> ResponderDao
+InMemViews ..|> AuditDao
+InMemViews ..|> UserDao
+StoredUser --> User
+
+DrsServer --> ClientHandler
+ClientHandler --> RequestDispatcher
+DrsRequestDispatcher ..|> RequestDispatcher
+DrsRequestDispatcher --> IncidentService
+DrsRequestDispatcher --> AuthService
+ClientHandler ..> Request
+ClientHandler ..> Response
+
+IncidentService --> IncidentDao
+IncidentService --> ResponderDao
+IncidentService --> AuditDao
+IncidentService --> FieldCipher
+IncidentService ..> Incident
+
+AuthService --> UserDao
+AuthService --> PasswordHasher
+AuthService --> AuditDao
+AuthService ..> Session
+
+ServerStub ..> Request
+ServerStub ..> Response
+ServerStub ..> Session
+LoginPresenter --> ServerStub
+
+Incident --> Severity
+Incident --> IncidentStatus
+User --> UserRole
+@enduml

@@ -1,0 +1,55 @@
+@startuml d2_use_case
+' Author: Fabian Roberto Guzman (12287570)
+title DRS-Enhanced - D2 Use-Case Diagram
+
+left to right direction
+skinparam shadowing false
+skinparam packageStyle rectangle
+
+actor Citizen
+actor Dispatcher
+actor Administrator
+
+Administrator --|> Dispatcher
+
+rectangle "DRS-Enhanced" {
+  usecase "Log in" as UC_login
+  usecase "Log out" as UC_logout
+  usecase "Submit incident report" as UC_submit
+  usecase "List incidents" as UC_list
+  usecase "Triage incident" as UC_triage
+  usecase "Allocate responder" as UC_assign
+  usecase "Resolve incident" as UC_resolve
+  usecase "Recommend alert template" as UC_template
+  usecase "View live board\n(planned)" as UC_board
+  usecase "View analytics\n(planned)" as UC_analytics
+}
+
+Citizen --> UC_login
+Citizen --> UC_submit
+Citizen --> UC_logout
+
+Dispatcher --> UC_login
+Dispatcher --> UC_list
+Dispatcher --> UC_triage
+Dispatcher --> UC_assign
+Dispatcher --> UC_resolve
+Dispatcher --> UC_template
+Dispatcher --> UC_board
+Dispatcher --> UC_analytics
+Dispatcher --> UC_logout
+
+UC_submit ..> UC_login : <<include>>
+UC_list ..> UC_login : <<include>>
+UC_triage ..> UC_login : <<include>>
+UC_assign ..> UC_login : <<include>>
+UC_resolve ..> UC_login : <<include>>
+UC_logout ..> UC_login : <<include>>
+UC_template ..> UC_triage : <<extend>>
+
+note bottom
+  Every protected use case requires an authenticated
+  session of a permitted role (access-rights, section 2.5).
+  PING and Log in are the only unauthenticated operations.
+end note
+@enduml

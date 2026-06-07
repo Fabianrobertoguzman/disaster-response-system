@@ -1,0 +1,49 @@
+@startuml d4_sequence_login
+' Author: Fabian Roberto Guzman (12287570)
+title DRS-Enhanced - D4 Sequence: Login and a role-gated action
+
+actor Dispatcher
+participant "ServerStub\n(client)" as Stub
+participant "ClientHandler" as Handler
+participant "DrsRequestDispatcher" as Disp
+participant "AuthService" as Auth
+participant "UserDao" as UserDao
+participant "PasswordHasher" as Hasher
+participant "AuditDao" as Audit
+
+== Login ==
+Dispatcher -> Stub : login("dispatch1", "pw")
+Stub -> Handler : Request(LOGIN, username, password)
+Handler -> Disp : handle(request)
+Disp -> Auth : login(username, password)
+Auth -> UserDao : findByUsername(username)
+UserDao --> Auth : StoredUser(hash, salt)
+Auth -> Hasher : matches(password, salt, hash)
+Hasher --> Auth : true
+Auth -> Audit : record(LOGIN, actor, time)
+Auth --> Disp : session token
+Disp --> Handler : Response.ok(Session{token, user})
+Handler --> Stub : Response
+Stub -> Stub : store token
+
+== Subsequent protected action ==
+Dispatcher -> Stub : triage(incidentId, CRITICAL)
+Stub -> Handler : Request(TRIAGE_INCIDENT, token, params)
+Handler -> Disp : handle(request)
+Disp -> Auth : requireRole(token, DISPATCHER/ADMIN)
+alt token valid and role permitted
+  Auth --> Disp : User
+  Disp --> Handler : Response.ok(incident)
+else not authenticated / wrong role
+  Auth --> Disp : throws AuthException
+  Disp --> Handler : Response.unauthorized(...)
+end
+Handler --> Stub : Response
+
+note over Auth, Hasher
+  An unknown username still runs an
+  equal-cost PBKDF2 against a dummy
+  hash, so timing cannot reveal whether
+  the account exists (anti-enumeration).
+end note
+@enduml

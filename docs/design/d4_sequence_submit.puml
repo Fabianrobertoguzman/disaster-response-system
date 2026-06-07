@@ -1,0 +1,41 @@
+@startuml d4_sequence_submit
+' Author: Fabian Roberto Guzman (12287570)
+title DRS-Enhanced - D4 Sequence: Submit Incident (distributed, encrypted at rest)
+
+actor Citizen
+participant "ServerStub\n(client)" as Stub
+participant "ClientHandler\n(server thread)" as Handler
+participant "DrsRequestDispatcher" as Disp
+participant "AuthService" as Auth
+participant "IncidentService" as Svc
+participant "FieldCipher" as Cipher
+participant "IncidentDao" as Dao
+database "MySQL" as DB
+participant "AuditDao" as Audit
+
+Citizen -> Stub : submitIncident(hazard, gps, "desc", victims)
+Stub -> Handler : Request(SUBMIT_INCIDENT, token, params)
+note right of Stub : ObjectOutputStream flushed\nbefore ObjectInputStream\n(handshake order)
+Handler -> Disp : handle(request)
+Disp -> Auth : requireRole(token, anyRole)
+Auth --> Disp : User (actor)
+Disp -> Svc : submitIncident(..., actorId)
+Svc -> Cipher : encrypt("desc")
+Cipher --> Svc : ciphertext
+Svc -> Dao : insert(incident[desc=ciphertext])
+Dao -> DB : INSERT incidents (uuid, ..., description=ciphertext)
+DB --> Dao : generated id
+Svc -> Audit : record(SUBMIT_INCIDENT, actor, time)
+Audit -> DB : INSERT audit_log (server timestamp)
+Svc -> Cipher : decrypt(ciphertext)
+Cipher --> Svc : "desc" (for the response only)
+Svc --> Disp : Incident (clear description)
+Disp --> Handler : Response.ok(incident)
+Handler --> Stub : Response
+Stub --> Citizen : Incident
+
+note over DB
+  Stored description is ciphertext;
+  only the served copy is decrypted.
+end note
+@enduml

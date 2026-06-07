@@ -1,0 +1,69 @@
+@startuml d1_architecture
+' Author: Fabian Roberto Guzman (12287570)
+title DRS-Enhanced - D1 Three-Tier Distributed Architecture
+
+skinparam componentStyle rectangle
+skinparam shadowing false
+
+node "Client host" {
+  package "Presentation tier (JavaFX MVP)" as client {
+    [App / FXML views\n(report, dispatch, login)] as views
+    [Presenters\n(Login/Report/Dispatch)] as presenters
+    [ServerStub] as stub
+  }
+}
+
+package "Shared protocol module\n(edu.cqu.drs.protocol)" as protocol {
+  [Request / Response\n(Serializable, serialVersionUID)] as messages
+  [Action / Status / ProtocolKeys] as actions
+}
+
+node "Server host" {
+  package "Business tier" as server {
+    [DrsServer\n(ServerSocket + thread pool)] as drsserver
+    [ClientHandler\n(one per client)] as handler
+    [DrsRequestDispatcher\n(routing + authz)] as dispatcher
+    [IncidentService] as incidentsvc
+    [AuthService] as authsvc
+    [Security\n(PasswordHasher, FieldCipher)] as security
+  }
+  package "Data tier (DAO)" as data {
+    [IncidentDao / ResponderDao /\nResourceDao / AuditDao / UserDao] as daos
+    [Database\n(connection-per-request)] as dbfactory
+  }
+}
+
+database "MySQL 8\n(8 tables: users, incidents,\nresponders, resources,\npartner_agencies,\nincident_responders,\nnotifications, audit_log)" as mysql
+
+views --> presenters
+presenters --> stub
+stub ..> messages : uses
+handler ..> messages : uses
+stub --> handler : "TCP sockets\n(ObjectStream)"
+drsserver --> handler : spawns
+handler --> dispatcher
+dispatcher --> incidentsvc
+dispatcher --> authsvc
+incidentsvc --> security : field encryption
+authsvc --> security : hashing
+incidentsvc --> daos
+authsvc --> daos
+daos --> dbfactory
+dbfactory --> mysql : JDBC
+
+note right of drsserver
+  Multi-threaded: a pooled
+  ClientHandler per client.
+  Shared state reached only
+  through the thread-safe
+  data tier (connection per
+  request / lock-guarded store).
+end note
+
+note bottom of security
+  V-C4: PBKDF2 = one-way hashing
+  (access rights). AES-256-GCM =
+  the genuine reversible §2.5
+  encryption measure.
+end note
+@enduml
