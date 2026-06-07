@@ -16,6 +16,12 @@ import java.util.UUID;
  * and both are optional because some events have no actor (e.g. a system event)
  * or no associated incident.</p>
  *
+ * <p>The {@link #getTimestamp() timestamp} is the Assessment-3 §2.5
+ * <em>time-stamping</em> measure: it is assigned by the <strong>server</strong>,
+ * never the client - by the database default ({@code CURRENT_TIMESTAMP}) in
+ * production, or by the in-memory store under test - so the recorded time cannot
+ * be forged by a client.</p>
+ *
  * @author Fabian Roberto Guzman (12287570)
  */
 public final class AuditEntry implements Serializable {

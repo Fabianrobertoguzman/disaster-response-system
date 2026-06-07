@@ -4,9 +4,15 @@ import edu.cqu.drs.data.DataAccessException;
 import edu.cqu.drs.model.GpsCoordinate;
 import edu.cqu.drs.model.HazardType;
 import edu.cqu.drs.model.Severity;
+import edu.cqu.drs.model.User;
+import edu.cqu.drs.model.UserRole;
+import edu.cqu.drs.protocol.Action;
 import edu.cqu.drs.protocol.ProtocolKeys;
 import edu.cqu.drs.protocol.Request;
 import edu.cqu.drs.protocol.Response;
+import edu.cqu.drs.security.AuthException;
+import edu.cqu.drs.security.AuthService;
+import edu.cqu.drs.security.Session;
 import edu.cqu.drs.server.service.IncidentService;
 
 import java.util.ArrayList;
@@ -14,13 +20,20 @@ import java.util.NoSuchElementException;
 import java.util.UUID;
 
 /**
- * Routes each {@link Request} to the matching {@link IncidentService} operation
+ * Routes each {@link Request} to the matching {@link IncidentService} operation,
+ * enforces authentication/authorisation when an {@link AuthService} is present,
  * and maps the result - or any failure - onto a {@link Response}.
  *
- * <p>Thread-safe: it is stateless apart from the injected service (which is itself
- * safe for concurrent use), so a single instance is shared by every
- * {@link ClientHandler}. Exceptions are translated to status codes rather than
- * propagated, so a bad request never tears down a worker thread.</p>
+ * <p>Two modes: with an {@link AuthService} (the production server) every action
+ * except {@code PING}/{@code LOGIN} requires a valid session token of a permitted
+ * role, and the acting user is recorded against each audited action; without one
+ * (used by the lower-level integration tests) the actions are open and the actor
+ * is null.</p>
+ *
+ * <p>Thread-safe: stateless apart from the injected services (themselves safe for
+ * concurrent use), so a single instance is shared by every {@link ClientHandler}.
+ * Exceptions are translated to status codes rather than propagated, so a bad
+ * request never tears down a worker thread.</p>
  *
  * @author Fabian Roberto Guzman (12287570)
  */
@@ -28,17 +41,31 @@ public class DrsRequestDispatcher implements RequestDispatcher {
 
     private final IncidentService incidentService;
 
+    /** Authentication authority; null disables auth (open mode for low-level tests). */
+    private final AuthService authService;
+
     /**
-     * Creates the dispatcher over the incident service.
+     * Creates an open-mode dispatcher (no authentication).
      *
      * @param incidentService the incident service (must not be null).
-     * @throws IllegalArgumentException if {@code incidentService} is null.
      */
     public DrsRequestDispatcher(IncidentService incidentService) {
+        this(incidentService, null);
+    }
+
+    /**
+     * Creates a dispatcher, optionally secured by an authentication service.
+     *
+     * @param incidentService the incident service (must not be null).
+     * @param authService     the authentication service, or null for open mode.
+     * @throws IllegalArgumentException if {@code incidentService} is null.
+     */
+    public DrsRequestDispatcher(IncidentService incidentService, AuthService authService) {
         if (incidentService == null) {
             throw new IllegalArgumentException("incidentService must not be null");
         }
         this.incidentService = incidentService;
+        this.authService = authService;
     }
 
     @Override
@@ -48,6 +75,8 @@ public class DrsRequestDispatcher implements RequestDispatcher {
         }
         try {
             return route(request);
+        } catch (AuthException ex) {
+            return Response.unauthorized(ex.getMessage());
         } catch (NoSuchElementException ex) {
             return Response.notFound(ex.getMessage());
         } catch (IllegalArgumentException ex) {
@@ -60,17 +89,32 @@ public class DrsRequestDispatcher implements RequestDispatcher {
     }
 
     /**
-     * Dispatches a request to the matching operation. The acting user is null in
-     * this increment; the security increment resolves it from the session token.
+     * Authenticates/authorises (when enabled) and dispatches the request.
      *
      * @param request the request to route.
      * @return the response.
      */
     private Response route(Request request) {
+        Action action = request.getAction();
+        if (action == Action.PING) {
+            return Response.ok("pong");
+        }
+        if (action == Action.LOGIN) {
+            return login(request);
+        }
+
         UUID actorId = null;
-        switch (request.getAction()) {
-            case PING:
-                return Response.ok("pong");
+        if (this.authService != null) {
+            actorId = authorize(action, request.getToken()).getId();
+        }
+        if (action == Action.LOGOUT) {
+            if (this.authService != null) {
+                this.authService.logout(request.getToken());
+            }
+            return Response.ok();
+        }
+
+        switch (action) {
             case SUBMIT_INCIDENT:
                 return Response.ok(this.incidentService.submitIncident(
                         (HazardType) request.get(ProtocolKeys.HAZARD_TYPE),
@@ -100,7 +144,44 @@ public class DrsRequestDispatcher implements RequestDispatcher {
             case LIST_RESPONDERS:
                 return Response.ok(new ArrayList<>(this.incidentService.listResponders()));
             default:
-                return Response.error("Unsupported action: " + request.getAction());
+                return Response.error("Unsupported action: " + action);
         }
+    }
+
+    /**
+     * Handles a login request, returning the new {@link Session} on success.
+     *
+     * @param request the login request.
+     * @return an OK response carrying the session, or an error if auth is disabled.
+     * @throws AuthException if the credentials are invalid.
+     */
+    private Response login(Request request) {
+        if (this.authService == null) {
+            return Response.error("authentication is not enabled on this server");
+        }
+        String token = this.authService.login(
+                request.getString(ProtocolKeys.USERNAME),
+                request.getString(ProtocolKeys.PASSWORD));
+        User user = this.authService.resolve(token)
+                .orElseThrow(() -> new AuthException("session lost immediately after login"));
+        return Response.ok(new Session(token, user));
+    }
+
+    /**
+     * Authorises a request: the token must resolve to a user with a role
+     * permitted for the action. Reporting (SUBMIT) and LOGOUT need only a valid
+     * session; the dispatch operations require DISPATCHER or ADMINISTRATOR.
+     *
+     * @param action the requested action.
+     * @param token  the session token.
+     * @return the authorised user.
+     * @throws AuthException if not authenticated or not permitted.
+     */
+    private User authorize(Action action, String token) {
+        if (action == Action.LOGOUT || action == Action.SUBMIT_INCIDENT) {
+            return this.authService.requireRole(token, UserRole.values());
+        }
+        return this.authService.requireRole(
+                token, UserRole.DISPATCHER, UserRole.ADMINISTRATOR);
     }
 }

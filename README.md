@@ -42,6 +42,9 @@ The enhanced system is two processes. Start the server first, then one or more c
    - In NetBeans: right-click `DrsServerLauncher.java` → **Run File**; or
    - On the command line: `mvn exec:java -Dexec.mainClass=edu.cqu.drs.server.DrsServerLauncher` (a port may be passed as the first argument).
 3. **Start a client**: `mvn javafx:run` (or run `App` from NetBeans). The client reaches the server through `edu.cqu.drs.client.ServerStub`; launch it more than once to see concurrent multi-client dispatch.
+4. **First login**: on a fresh database the server creates a default administrator — username **`admin`**, password **`admin12345`** (override with the `DRS_ADMIN_PASSWORD` environment variable; change it after first login). Dispatch operations require the `DISPATCHER` or `ADMINISTRATOR` role; citizens may submit reports.
+
+**Security configuration (§2.5).** Passwords are stored as salted PBKDF2 hashes (one-way). Sensitive incident descriptions are encrypted at rest with AES-256-GCM (genuine, reversible — distinct from hashing). The encryption key is read from the `DRS_FIELD_KEY` environment variable; if it is unset the server generates an ephemeral key and prints it at start-up — set `DRS_FIELD_KEY` to that value to keep encrypted data readable across restarts. Every login/logout and mutating action is written, server-timestamped, to the append-only audit trail (non-repudiation).
 
 The client/server protocol lives in the shared `edu.cqu.drs.protocol` package; the multi-threaded server (`edu.cqu.drs.server.DrsServer`) serves one pooled `ClientHandler` per connection.
 

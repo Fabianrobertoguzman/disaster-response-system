@@ -10,6 +10,7 @@ import edu.cqu.drs.protocol.ProtocolKeys;
 import edu.cqu.drs.protocol.Request;
 import edu.cqu.drs.protocol.Response;
 import edu.cqu.drs.protocol.Status;
+import edu.cqu.drs.security.Session;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -102,6 +103,30 @@ public class ServerStub implements AutoCloseable {
     /** @return the server's reply to a liveness check (expected: "pong"). */
     public String ping() {
         return (String) requireOk(send(new Request(Action.PING)));
+    }
+
+    /**
+     * Authenticates with the server and stores the session token for subsequent
+     * requests.
+     *
+     * @param username the login name.
+     * @param password the password.
+     * @return the established {@link Session} (token + authenticated user).
+     * @throws ServerStubException with {@link Status#UNAUTHORIZED} if the
+     *         credentials are rejected.
+     */
+    public Session login(String username, String password) {
+        Session session = (Session) requireOk(send(new Request(Action.LOGIN)
+                .with(ProtocolKeys.USERNAME, username)
+                .with(ProtocolKeys.PASSWORD, password)));
+        setToken(session.getToken());
+        return session;
+    }
+
+    /** Ends the current session and clears the stored token. */
+    public void logout() {
+        send(new Request(Action.LOGOUT));
+        setToken(null);
     }
 
     /**
