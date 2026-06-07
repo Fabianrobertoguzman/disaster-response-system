@@ -163,6 +163,11 @@ public final class Database {
      * Reads a SQL script from the classpath and splits it into individual
      * statements, ignoring blank lines and {@code --} line comments.
      *
+     * <p>The split is a simple one on {@code ;}; it assumes the bundled scripts
+     * contain no semicolons inside string literals and no {@code DELIMITER}-style
+     * stored-routine blocks, which holds for {@code schema.sql} and
+     * {@code seed.sql}. A fuller SQL parser would be needed if that changes.</p>
+     *
      * @param resource the classpath location of the script.
      * @return the list of non-empty SQL statements, in order.
      * @throws IOException if the script is missing or unreadable.

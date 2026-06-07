@@ -36,6 +36,28 @@ public class Resource {
         this.available = true;
     }
 
+    /**
+     * Reconstruction constructor used only by the persistence tier to rebuild a
+     * resource from a stored database row, preserving the persisted identity and
+     * availability flag rather than generating a new id and defaulting to
+     * available.
+     *
+     * @param id           the persisted identifier (must not be null).
+     * @param resourceType the resource type (must not be null or blank).
+     * @param available    whether the stored resource is available.
+     * @throws IllegalArgumentException if {@code id} is null or
+     *         {@code resourceType} is null or blank.
+     */
+    public Resource(UUID id, String resourceType, boolean available) {
+        requireNonBlankType(resourceType);
+        if (id == null) {
+            throw new IllegalArgumentException("id is required to reconstruct a resource");
+        }
+        this.id = id;
+        this.resourceType = resourceType;
+        this.available = available;
+    }
+
     /** @throws IllegalArgumentException if {@code resourceType} is null or blank. */
     private static void requireNonBlankType(String resourceType) {
         if (resourceType == null || resourceType.trim().isEmpty()) {

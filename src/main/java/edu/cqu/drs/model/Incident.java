@@ -86,6 +86,61 @@ public class Incident {
     }
 
     /**
+     * Reconstruction constructor used <strong>only by the persistence tier</strong>
+     * (the data-access objects) to rebuild an incident from a stored database row.
+     *
+     * <p>Unlike {@link #Incident(HazardType, GpsCoordinate, String, int)}, this
+     * constructor accepts the already-assigned identity, timestamp, severity,
+     * status, recommended template and responder list, and it deliberately does
+     * <strong>not</strong> write a "reported" entry to the audit log: the
+     * persisted audit trail lives in its own table, so loading an incident must
+     * not fabricate a fresh event. It exists so that the surrogate-key / UUID
+     * round-trip performed by the data tier yields an object equal to the one
+     * that was originally saved.</p>
+     *
+     * @param id                  the persisted identifier (must not be null).
+     * @param hazardType          the kind of disaster (must not be null).
+     * @param severity            the stored triage severity (must not be null).
+     * @param gpsLocation         the stored location (must not be null).
+     * @param description         the stored description (null is coerced to "").
+     * @param victimCount         the stored victim estimate (must not be negative).
+     * @param reportedAt          the stored creation timestamp (must not be null).
+     * @param status              the stored lifecycle state (must not be null).
+     * @param recommendedTemplate the stored recommended template, or null if none.
+     * @param responders          the responders allocated to this incident, or null
+     *                            for none (at most {@link #MAX_RESPONDERS}).
+     * @throws IllegalArgumentException if a required argument is null, if
+     *         {@code victimCount} is negative, or if more than
+     *         {@link #MAX_RESPONDERS} responders are supplied.
+     */
+    public Incident(UUID id, HazardType hazardType, Severity severity, GpsCoordinate gpsLocation,
+            String description, int victimCount, LocalDateTime reportedAt, IncidentStatus status,
+            AlertTemplate recommendedTemplate, List<Responder> responders) {
+        validateInputs(hazardType, gpsLocation, victimCount);
+        if (id == null || severity == null || reportedAt == null || status == null) {
+            throw new IllegalArgumentException(
+                    "id, severity, reportedAt and status are required to reconstruct an incident");
+        }
+        List<Responder> loaded = (responders == null)
+                ? new ArrayList<>() : new ArrayList<>(responders);
+        if (loaded.size() > MAX_RESPONDERS) {
+            throw new IllegalArgumentException(
+                    "an incident cannot have more than " + MAX_RESPONDERS + " responders");
+        }
+        this.id = id;
+        this.hazardType = hazardType;
+        this.severity = severity;
+        this.gpsLocation = gpsLocation;
+        this.description = (description == null) ? "" : description;
+        this.victimCount = victimCount;
+        this.reportedAt = reportedAt;
+        this.status = status;
+        this.recommendedTemplate = recommendedTemplate;
+        this.responders = loaded;
+        this.auditLog = new AuditLog();
+    }
+
+    /**
      * Validates the constructor inputs. Extracted from the inline guard via an
      * Extract Method refactoring so the constructor stays small and the validation
      * rule lives in one named place. Matches the pattern used by the other model

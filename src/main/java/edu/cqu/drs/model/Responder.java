@@ -38,6 +38,28 @@ public class Responder {
     }
 
     /**
+     * Reconstruction constructor used only by the persistence tier to rebuild a
+     * responder from a stored database row, preserving the persisted identity and
+     * current tasking rather than generating a new one.
+     *
+     * @param id               the persisted identifier (must not be null).
+     * @param name             the display name (must not be null or blank).
+     * @param currentTaskingId the id of the incident this responder is tasked to,
+     *                         or null if available.
+     * @throws IllegalArgumentException if {@code id} is null or {@code name} is
+     *         null or blank.
+     */
+    public Responder(UUID id, String name, UUID currentTaskingId) {
+        requireNonBlankName(name);
+        if (id == null) {
+            throw new IllegalArgumentException("id is required to reconstruct a responder");
+        }
+        this.id = id;
+        this.name = name;
+        this.currentTaskingId = currentTaskingId;
+    }
+
+    /**
      * Validates that a responder name is non-null and non-blank.
      *
      * @param name the name to check.

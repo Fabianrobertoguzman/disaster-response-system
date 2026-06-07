@@ -23,11 +23,15 @@ JavaFX client (Scene Builder)  <-- sockets/DTOs -->  multi-threaded server  <-- 
 
 ```
 mvn clean compile        # compile
-mvn test                 # JUnit suite
+mvn test                 # JUnit suite (DAO integration tests skip cleanly if MySQL is absent)
 mvn javafx:run           # launch the client (use the javafx-maven-plugin goal, not a plain Run)
 ```
 
-The MySQL schema is created programmatically; `sql/01_schema.sql` + `sql/02_populate.sql` and an editable `db.properties` ship so the project compiles and runs from a clean extract on a fresh machine.
+### Database setup
+
+- **Prerequisite**: a running MySQL 8 server. The data tier connects with the settings in `db.properties` (repo root); edit `db.user`/`db.password`/`db.url` to match your install, or override with the `DB_USER` / `DB_PASSWORD` / `DB_URL` environment variables (no recompilation needed). The default user must hold the `CREATE` privilege, because `createDatabaseIfNotExist=true` lets the application create the `drs` database on first connection.
+- **Schema and reference data** ship as SQL scripts at `src/main/resources/db/schema.sql` and `src/main/resources/db/seed.sql`. They are applied programmatically at start-up (the schema is dropped and recreated so a stale database cannot keep old definitions), and can also be run by hand to inspect or set up the database. A bundled copy of `db.properties` is also packaged on the classpath as a last-resort default, so the project compiles and runs from a clean extract on a fresh machine.
+- The JUnit suite contains DAO integration tests that exercise real JDBC; when no MySQL server is reachable they are **skipped** (not failed), so `mvn test` still produces a green build on a database-free machine.
 
 ## What carries over from Assessments 1 and 2
 
