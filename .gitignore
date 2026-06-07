@@ -1,2 +1,22 @@
+# Maven build output
 target/
-.env
+*.class
+
+# IDE
+.idea/
+*.iml
+*.iws
+*.ipr
+nbproject/private/
+nb-configuration.xml
+# nbactions.xml is intentionally tracked so the NetBeans Run button uses javafx:run.
+.classpath
+.project
+.settings/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# logs / temp
+*.log

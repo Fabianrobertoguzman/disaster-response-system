@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<actions>
+        <action>
+            <actionName>CUSTOM-clean compile javafx:run</actionName>
+            <displayName>clean compile javafx:run</displayName>
+            <goals>
+                <goal>clean</goal>
+                <goal>compile</goal>
+                <goal>javafx:run</goal>
+            </goals>
+        </action>
+    </actions>

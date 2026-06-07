@@ -1,50 +1,97 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>com.coit20258</groupId>
-    <artifactId>drs</artifactId>
-    <version>1.0-SNAPSHOT</version>
+
+    <groupId>edu.cqu.drs</groupId>
+    <artifactId>drs-initial</artifactId>
+    <version>1.0.0</version>
     <packaging>jar</packaging>
+
+    <name>DRS-Initial</name>
+    <description>Disaster Response System — Initial prototype (COIT20258 Assessment 2). MVC/MVP-driven JavaFX Scene Builder desktop application. Fabian Roberto Guzman, 12287570.</description>
+
     <properties>
+        <!-- Toolchain: Java 17 + JavaFX 17.0.6 (LTS). JavaFX 17 satisfies Assessment 1's NFR-O01
+             ("JavaFX 17+ ... Scene Builder") and runs cleanly on JDK 11, 17, 19 and 21. JUnit 5.3.1
+             and Surefire 2.22.2 are the JUnit 5 combo used in the Week-6 testing workshop. -->
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.compiler.release>21</maven.compiler.release>
-        <exec.mainClass>com.coit20258.drs.Drs</exec.mainClass>
+        <junit.jupiter.version>5.3.1</junit.jupiter.version>
+        <javafx.version>17.0.6</javafx.version>
+        <!-- Main class. LAUNCH the GUI with `mvn javafx:run` (the javafx-maven-plugin puts the JavaFX
+             modules on the module-path). A plain `exec:java` / NetBeans "Run Project" fails with
+             "JavaFX runtime components are missing" because JavaFX 11+ is a separate dependency, not part of the JDK. -->
+        <exec.mainClass>edu.cqu.drs.App</exec.mainClass>
     </properties>
+
     <dependencies>
+        <!-- JUnit 5 (Jupiter): API + engine + params, test scope. -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <version>${junit.jupiter.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-engine</artifactId>
+            <version>${junit.jupiter.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-params</artifactId>
+            <version>${junit.jupiter.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- JavaFX 17.0.6 (the javafx.version property above) - controls + FXML. -->
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-controls</artifactId>
-            <version>21</version>
+            <version>${javafx.version}</version>
         </dependency>
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-fxml</artifactId>
-            <version>21</version>
-        </dependency>
-        <dependency>
-            <groupId>io.github.cdimascio</groupId>
-            <artifactId>dotenv-java</artifactId>
-            <version>3.2.0</version>
-        </dependency>
-        <dependency>
-            <groupId>com.mysql</groupId>
-            <artifactId>mysql-connector-j</artifactId>
-            <version>8.3.0</version>
+            <version>${javafx.version}</version>
         </dependency>
     </dependencies>
+
     <build>
         <plugins>
+            <!-- Compile with Java 17 (see maven.compiler.source/target above). -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.8.0</version>
+                <version>3.8.1</version>
             </plugin>
+
+            <!-- Surefire runs the test phase. NOTE: Surefire's DEFAULT include pattern is
+                 **/*Test.java, **/Test*.java, **/*Tests.java, **/*TestCase.java - NOT *Spec.java.
+                 The test classes use the BDD-style *Spec.java naming convention, so the <includes>
+                 block below is required - without it, `mvn test` finds ZERO tests. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>2.22.2</version>
+                <configuration>
+                    <includes>
+                        <include>**/*Spec.java</include>
+                    </includes>
+                </configuration>
+            </plugin>
+
+            <!-- javafx-maven-plugin: `mvn javafx:run` launches the GUI with the JavaFX module-path set up. -->
             <plugin>
                 <groupId>org.openjfx</groupId>
                 <artifactId>javafx-maven-plugin</artifactId>
                 <version>0.0.8</version>
                 <configuration>
-                    <mainClass>com.coit20258.drs.Drs</mainClass>
+                    <mainClass>edu.cqu.drs.App</mainClass>
                 </configuration>
             </plugin>
         </plugins>

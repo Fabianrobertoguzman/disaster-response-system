@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.VBox?>
+
+<!--
+  Citizen-report view (Assessment One's ReportView; use case UC-01 "Report
+  Disaster"). Controller: edu.cqu.drs.view.ReportController. Styling comes from
+  drs.css, which the application attaches at scene level.
+-->
+<VBox xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="edu.cqu.drs.view.ReportController"
+      spacing="14.0" styleClass="report-view">
+    <padding>
+        <Insets bottom="24.0" left="28.0" right="28.0" top="24.0" />
+    </padding>
+    <children>
+        <Label styleClass="h1" text="Report a Disaster" />
+        <Label styleClass="subtitle" wrapText="true"
+               text="Tell us what is happening. Your location and the time are recorded automatically." />
+        <Separator />
+        <GridPane hgap="14.0" vgap="12.0">
+            <columnConstraints>
+                <ColumnConstraints halignment="RIGHT" minWidth="180.0" />
+                <ColumnConstraints hgrow="ALWAYS" minWidth="280.0" />
+            </columnConstraints>
+            <rowConstraints>
+                <RowConstraints />
+                <RowConstraints />
+                <RowConstraints />
+                <RowConstraints valignment="TOP" />
+                <RowConstraints />
+                <RowConstraints />
+            </rowConstraints>
+            <children>
+                <Label text="Hazard type:" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+                <ComboBox fx:id="hazardTypeCombo" promptText="Select a hazard type"
+                          maxWidth="Infinity"
+                          GridPane.columnIndex="1" GridPane.rowIndex="0" />
+
+                <Label text="Location (auto-detected):" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+                <HBox spacing="10.0" alignment="CENTER_LEFT"
+                      GridPane.columnIndex="1" GridPane.rowIndex="1">
+                    <children>
+                        <Label fx:id="locationLabel" styleClass="value" text="(capturing...)" />
+                        <Button fx:id="refreshLocationButton" text="Refresh"
+                                onAction="#onRefreshLocation" />
+                    </children>
+                </HBox>
+
+                <Label text="GPS status:" GridPane.columnIndex="0" GridPane.rowIndex="2" />
+                <Label fx:id="gpsStatusLabel" styleClass="value" text="Acquiring GPS fix..."
+                       GridPane.columnIndex="1" GridPane.rowIndex="2" />
+
+                <Label text="Description:" GridPane.columnIndex="0" GridPane.rowIndex="3" />
+                <TextArea fx:id="descriptionArea" prefRowCount="4" wrapText="true"
+                          promptText="Describe what you see: landmarks, scale, immediate hazards..."
+                          GridPane.columnIndex="1" GridPane.rowIndex="3" />
+
+                <Label text="People affected (estimate):" GridPane.columnIndex="0" GridPane.rowIndex="4" />
+                <TextField fx:id="victimCountField" promptText="0"
+                           GridPane.columnIndex="1" GridPane.rowIndex="4" />
+
+                <Label text="Photo (optional):" GridPane.columnIndex="0" GridPane.rowIndex="5" />
+                <Button fx:id="attachPhotoButton" text="Attach Photo..." onAction="#onAttachPhoto"
+                        GridPane.columnIndex="1" GridPane.rowIndex="5" />
+            </children>
+        </GridPane>
+        <Separator />
+        <HBox spacing="12.0" alignment="CENTER_LEFT" styleClass="button-bar">
+            <children>
+                <Button fx:id="submitButton" text="Submit Report" defaultButton="true"
+                        onAction="#onSubmit" styleClass="primary" />
+                <Button fx:id="clearButton" text="Clear" onAction="#onClear" />
+            </children>
+        </HBox>
+        <Label fx:id="statusLabel" wrapText="true" styleClass="status" />
+    </children>
+</VBox>

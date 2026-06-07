@@ -1,0 +1,300 @@
+@startuml
+'===========================================================================
+' DRS-Initial : class diagram - architecture overview.
+' COIT20258 Assessment 2 - Fabian Roberto Guzman (12287570).
+'
+' Reflects the implemented prototype. Three layers realising the MVC /
+' Application-Model (Model-View-Presenter) variant:
+'   * presentation tier - edu.cqu.drs (App) + edu.cqu.drs.view (the FXML
+'     controllers) + the report.fxml / dispatch.fxml / drs.css resources;
+'   * business tier     - edu.cqu.drs.presenter (the presenters, the
+'     AppContext singleton, PartnerNotifier, and the two creative-feature
+'     classes AlertTemplateRecommender and SelfTestLauncher);
+'   * data tier         - edu.cqu.drs.model (the domain entities, the enums,
+'     and the IPartnerAgency interface with its eight stub implementations).
+'
+' Only architecturally-significant members are shown; class_diagram_domain.puml
+' details the model package's members in full. The FXML controllers' @FXML
+' event-handler methods are shown without the @FXML stereotype for brevity.
+'===========================================================================
+
+scale max 1500*1100
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+skinparam defaultFontSize 12
+skinparam classFontSize 13
+skinparam classAttributeFontSize 11
+skinparam noteFontSize 11
+skinparam nodesep 30
+skinparam ranksep 45
+hide empty members
+
+class "javafx.application.Application" as Application <<JavaFX framework>>
+
+package "edu.cqu.drs + edu.cqu.drs.view  (presentation tier)" as P_view {
+  class App {
+    -root : BorderPane
+    +start(stage : Stage)
+    -buildMenuBar() : MenuBar
+    -runSelfTests()
+    -loadView(resourcePath : String) : Parent
+    {static} +main(args : String[])
+  }
+  class ReportController {
+    -presenter : ReportPresenter
+    +ReportController()
+    -initialize()
+    -onSubmit()
+    -onClear()
+    -onRefreshLocation()
+    -onAttachPhoto()
+  }
+  class DispatchController {
+    -appContext : AppContext
+    -presenter : DispatchPresenter
+    -selected : Incident
+    +DispatchController()
+    -initialize()
+    -onRefresh()
+    -onTriage()
+    -onResolve()
+    -onAssignResponder()
+    -onNotifyPartners()
+  }
+}
+
+package "edu.cqu.drs.presenter  (business tier)" as P_pres {
+  class AppContext <<Singleton>> {
+    {static} -instance : AppContext
+    -AppContext()
+    {static} +getInstance() : AppContext
+    +getIncidentQueue() : IncidentQueue
+    +getResponderRoster() : List<Responder>
+    +getPartnerNotifier() : PartnerNotifier
+  }
+  class ReportPresenter {
+    +ReportPresenter(queue : IncidentQueue)
+    +submitIncident(hazard : HazardType, location : GpsCoordinate, description : String, victimCount : int) : Incident
+    +queueSize() : int
+  }
+  class DispatchPresenter {
+    {static} +EXPECTED_LATENCY_MS : long = 2000
+    +DispatchPresenter(queue : IncidentQueue)
+    +pendingIncidents() : List<Incident>
+    +pendingCount() : int
+    +triage(incident : Incident, severity : Severity)
+    +assignResponder(incident : Incident, responder : Responder)
+    +recommendTemplate(incident : Incident) : AlertTemplate
+    +resolve(incident : Incident)
+  }
+  class PartnerNotifier {
+    +PartnerNotifier(agencies : List<IPartnerAgency>)
+    +notifyAll(incident : Incident) : Map<String, Boolean>
+    +getAgencies() : List<IPartnerAgency>
+    +getNotificationLog() : AuditLog
+    +describeAgencies() : List<String>
+  }
+  class AlertTemplateRecommender {
+    +AlertTemplateRecommender()
+    +recommend(incident : Incident) : AlertTemplate
+  }
+  class SelfTestLauncher {
+    +SelfTestLauncher()
+    +runAllTests() : TestRunReport
+  }
+}
+
+package "edu.cqu.drs.model  (data tier)" as P_model {
+  class Incident {
+    {static} +MAX_RESPONDERS : int = 8
+    {static} +DEFAULT_SEVERITY : Severity = MEDIUM
+    -id : UUID
+    -hazardType : HazardType
+    -severity : Severity
+    -gpsLocation : GpsCoordinate
+    -description : String
+    -victimCount : int
+    -reportedAt : LocalDateTime
+    -status : IncidentStatus
+    -recommendedTemplate : AlertTemplate
+    --
+    +Incident(hazardType : HazardType, gpsLocation : GpsCoordinate, description : String, victimCount : int)
+    +triage(severity : Severity)
+    +assignResponder(responder : Responder)
+    +resolve()
+  }
+  class IncidentQueue {
+    {static} -MOST_URGENT_FIRST : Comparator<Incident>
+    -queue : PriorityQueue<Incident>
+    +enqueue(incident : Incident)
+    +dequeue() : Incident
+    +peek() : Incident
+    +size() : int
+    +asSortedList() : List<Incident>
+    +remove(incident : Incident) : boolean
+  }
+  class Responder {
+    -id : UUID
+    -name : String
+    -currentTaskingId : UUID
+    +isAvailable() : boolean
+  }
+  class Resource {
+    -id : UUID
+    -resourceType : String
+    -available : boolean
+    +markAllocated()
+    +markAvailable()
+  }
+  class User {
+    -id : UUID
+    -username : String
+    -role : UserRole
+    +isAdministrator() : boolean
+  }
+  class AuditLog {
+    -entries : List<String>
+    +record(message : String)
+    +getEntries() : List<String>
+    +size() : int
+  }
+  class GpsCoordinate <<value object>> {
+    -latitude : double
+    -longitude : double
+    {static} +captureCurrentLocation() : GpsCoordinate
+  }
+  class TestRunReport <<value object>> {
+    -testsRun : long
+    -passed : long
+    -failed : long
+    -durationMs : long
+    +isAllGreen() : boolean
+  }
+  interface IPartnerAgency {
+    +notify(incident : Incident)
+    +acknowledge(incident : Incident) : boolean
+    +getAgencyName() : String
+    +availableUnits() : int
+  }
+  together {
+    class FireEmergencyService <<stub>>
+    class HospitalSystem <<stub>>
+    class ElectricityUtility <<stub>>
+    class TransportAuthority <<stub>>
+    class PoliceService <<stub>>
+    class WasteManagementService <<stub>>
+    class WaterUtility <<stub>>
+    class EducationDepartment <<stub>>
+  }
+  enum HazardType {
+    HURRICANE
+    FIRE
+    EARTHQUAKE
+    FLOOD
+    STORM
+    HAZMAT
+  }
+  enum Severity {
+    LOW
+    MEDIUM
+    HIGH
+    CRITICAL
+    --
+    -priority : int
+    +getPriority() : int
+  }
+  enum IncidentStatus {
+    REPORTED
+    TRIAGED
+    RESOLVED
+  }
+  enum AlertTemplate {
+    EVAC_NOTICE
+    SHELTER_IN_PLACE
+    ALL_CLEAR
+    GENERAL_ADVISORY
+    --
+    -capMessage : String
+    +getCapMessage() : String
+  }
+  enum UserRole {
+    CITIZEN
+    DISPATCHER
+    FIELD_RESPONDER
+    PUBLIC_INFORMATION_OFFICER
+    ADMINISTRATOR
+    AUDITOR
+  }
+}
+
+' ----------------------------- relationships -----------------------------
+
+' generalisation
+App --|> Application
+
+' presentation -> business (the controllers/App use these)
+App ..> ReportController : <<loads report.fxml>>
+App ..> DispatchController : <<loads dispatch.fxml>>
+App ..> SelfTestLauncher
+App ..> TestRunReport
+ReportController "1" --> "1" ReportPresenter
+ReportController ..> AppContext : <<getInstance>>
+DispatchController "1" --> "1" DispatchPresenter
+DispatchController "1" --> "1" AppContext
+DispatchController ..> PartnerNotifier : <<via AppContext>>
+
+' business internal
+AppContext "1" *-- "1" IncidentQueue
+AppContext "1" *-- "6" Responder : roster (composition — created in AppContext ctor)
+AppContext "1" *-- "1" PartnerNotifier
+ReportPresenter "1" --> "1" IncidentQueue
+DispatchPresenter "1" --> "1" IncidentQueue
+DispatchPresenter "1" *-- "1" AlertTemplateRecommender
+PartnerNotifier "1" o-- "0..*" IPartnerAgency : registered (8 stubbed)
+PartnerNotifier "1" *-- "1" AuditLog : notification log
+
+' business -> model (dependencies)
+ReportPresenter ..> Incident : <<create>>
+DispatchPresenter ..> Incident
+AlertTemplateRecommender ..> Incident
+AlertTemplateRecommender ..> AlertTemplate
+SelfTestLauncher ..> Incident
+SelfTestLauncher ..> TestRunReport : <<create>>
+
+' model internal
+IncidentQueue "1" o-- "0..*" Incident : most-urgent-first
+Incident "1" *-- "1" AuditLog
+Incident "0..1" --> "0..8" Responder : assigned
+note on link
+  Responder.currentTaskingId : UUID
+  tracks this association by id
+  (not by object reference); a null
+  id means the Responder is available.
+end note
+Incident "*" --> "1" GpsCoordinate
+Incident "*" --> "1" HazardType
+Incident "*" --> "1" Severity
+Incident "*" --> "1" IncidentStatus
+Incident "*" --> "0..1" AlertTemplate : recommended
+User "*" --> "1" UserRole
+FireEmergencyService ..|> IPartnerAgency
+HospitalSystem ..|> IPartnerAgency
+ElectricityUtility ..|> IPartnerAgency
+TransportAuthority ..|> IPartnerAgency
+PoliceService ..|> IPartnerAgency
+WasteManagementService ..|> IPartnerAgency
+WaterUtility ..|> IPartnerAgency
+EducationDepartment ..|> IPartnerAgency
+
+note as N1
+  Presentation tier: App (a JavaFX Application) hosts the navigation
+  MenuBar; ReportController / DispatchController are bound to report.fxml /
+  dispatch.fxml (authored in Scene Builder), styled by drs.css. All eight
+  partner-agency stubs named in Assessment One's NFR-O04 are implemented;
+  IPartnerAgency is the seam where any ninth agency would plug in without
+  changing PartnerNotifier. Persistence is out of scope: AppContext is the
+  prototype's only shared in-memory state.
+end note
+
+@enduml

@@ -1,0 +1,259 @@
+@startuml
+'===========================================================================
+' DRS-Initial : class diagram - domain model detail (edu.cqu.drs.model).
+' COIT20258 Assessment 2 - Fabian Roberto Guzman (12287570).
+'
+' A zoom-in on the data tier with the key members of each class. The presenter
+' and view tiers that depend on these classes are in class_diagram.puml (the
+' architecture overview).
+'
+' equals()/hashCode() policy: id-bearing entities (Incident, Responder, Resource,
+' User) use UUID identity equality; value objects (GpsCoordinate, TestRunReport)
+' use full value equality (over all fields). Default Object identity is
+' sufficient for AuditLog (one log per Incident) and IncidentQueue (one queue
+' per AppContext) - no equality use-case. equals/hashCode are rendered in the
+' diagram only on the value objects to reduce visual noise; the policy is
+' documented here so it can be cross-checked against the source.
+'===========================================================================
+
+scale max 1500*1100
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam defaultFontSize 12
+skinparam classFontSize 13
+skinparam classAttributeFontSize 11
+skinparam noteFontSize 11
+skinparam nodesep 30
+skinparam ranksep 45
+hide empty members
+
+class Incident {
+  {static} +MAX_RESPONDERS : int = 8
+  {static} +DEFAULT_SEVERITY : Severity = Severity.MEDIUM
+  -id : UUID
+  -hazardType : HazardType
+  -severity : Severity
+  -gpsLocation : GpsCoordinate
+  -description : String
+  -victimCount : int
+  -reportedAt : LocalDateTime
+  -status : IncidentStatus
+  -responders : List<Responder>
+  -recommendedTemplate : AlertTemplate
+  -auditLog : AuditLog
+  --
+  +Incident(hazardType : HazardType, gpsLocation : GpsCoordinate, description : String, victimCount : int)
+  +triage(severity : Severity)
+  +assignResponder(responder : Responder)
+  +resolve()
+  +getId() : UUID
+  +getStatus() : IncidentStatus
+  +getSeverity() : Severity
+  +getHazardType() : HazardType
+  +getGpsLocation() : GpsCoordinate
+  +getDescription() : String
+  +getVictimCount() : int
+  +getReportedAt() : LocalDateTime
+  +getResponders() : List<Responder>
+  +getAuditLog() : AuditLog
+  +getRecommendedTemplate() : AlertTemplate
+  +setRecommendedTemplate(t : AlertTemplate)
+  +setSeverity(s : Severity)
+  +setHazardType(h : HazardType)
+  +setGpsLocation(g : GpsCoordinate)
+  +setDescription(d : String)
+  +setVictimCount(n : int)
+  +setStatus(s : IncidentStatus)
+  +toString() : String
+}
+
+class IncidentQueue {
+  {static} -MOST_URGENT_FIRST : Comparator<Incident>
+  -queue : PriorityQueue<Incident>
+  +IncidentQueue()
+  +enqueue(incident : Incident)
+  +dequeue() : Incident
+  +peek() : Incident
+  +size() : int
+  +isEmpty() : boolean
+  +asSortedList() : List<Incident>
+  +remove(incident : Incident) : boolean
+  +contains(incident : Incident) : boolean
+  +toString() : String
+}
+
+class Responder {
+  -id : UUID
+  -name : String
+  -currentTaskingId : UUID
+  +Responder(name : String)
+  +getId() : UUID
+  +getName() : String
+  +setName(name : String)
+  +getCurrentTaskingId() : UUID
+  +setCurrentTaskingId(id : UUID)
+  +isAvailable() : boolean
+  +toString() : String
+}
+
+class Resource {
+  -id : UUID
+  -resourceType : String
+  -available : boolean
+  +Resource(resourceType : String)
+  +getId() : UUID
+  +getResourceType() : String
+  +setResourceType(type : String)
+  +isAvailable() : boolean
+  +markAllocated()
+  +markAvailable()
+  +toString() : String
+}
+
+class User {
+  -id : UUID
+  -username : String
+  -role : UserRole
+  +User(username : String, role : UserRole)
+  +getId() : UUID
+  +getUsername() : String
+  +setUsername(username : String)
+  +getRole() : UserRole
+  +setRole(role : UserRole)
+  +isAdministrator() : boolean
+  +toString() : String
+}
+
+class AuditLog {
+  -entries : List<String>
+  +AuditLog()
+  +size() : int
+  +getEntries() : List<String>
+  +record(message : String)
+  +toString() : String
+}
+
+class GpsCoordinate <<value object>> {
+  {static} +MIN_LATITUDE : double = -90.0
+  {static} +MAX_LATITUDE : double = 90.0
+  {static} +MIN_LONGITUDE : double = -180.0
+  {static} +MAX_LONGITUDE : double = 180.0
+  -latitude : double
+  -longitude : double
+  +GpsCoordinate(latitude : double, longitude : double)
+  {static} +captureCurrentLocation() : GpsCoordinate
+  +getLatitude() : double
+  +getLongitude() : double
+  +toString() : String
+  +equals(o : Object) : boolean
+  +hashCode() : int
+}
+
+class TestRunReport <<value object>> {
+  -testsRun : long
+  -passed : long
+  -failed : long
+  -durationMs : long
+  -failureSummaries : List<String>
+  +TestRunReport(testsRun : long, passed : long, failed : long, durationMs : long, failureSummaries : List<String>)
+  +getTestsRun() : long
+  +getPassed() : long
+  +getFailed() : long
+  +getDurationMs() : long
+  +getFailureSummaries() : List<String>
+  +isAllGreen() : boolean
+  +toString() : String
+  +equals(o : Object) : boolean
+  +hashCode() : int
+}
+
+interface IPartnerAgency {
+  +notify(incident : Incident)
+  +acknowledge(incident : Incident) : boolean
+  +getAgencyName() : String
+  +availableUnits() : int
+}
+together {
+  class FireEmergencyService <<stub>>
+  class HospitalSystem <<stub>>
+  class ElectricityUtility <<stub>>
+  class TransportAuthority <<stub>>
+  class PoliceService <<stub>>
+  class WasteManagementService <<stub>>
+  class WaterUtility <<stub>>
+  class EducationDepartment <<stub>>
+}
+note bottom of IPartnerAgency
+  Eight stub agencies realise this interface in the prototype, each with a
+  fixed name and unit count - all of Assessment One's NFR-O04 named partners.
+  IPartnerAgency is the seam where any ninth agency would plug in: a single
+  new class implementing IPartnerAgency plus one line registering it with
+  PartnerNotifier; the notifier itself does not change.
+end note
+
+enum HazardType {
+  HURRICANE
+  FIRE
+  EARTHQUAKE
+  FLOOD
+  STORM
+  HAZMAT
+}
+enum Severity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+  --
+  -priority : int
+  +getPriority() : int
+}
+enum IncidentStatus {
+  REPORTED
+  TRIAGED
+  RESOLVED
+}
+enum AlertTemplate {
+  EVAC_NOTICE
+  SHELTER_IN_PLACE
+  ALL_CLEAR
+  GENERAL_ADVISORY
+  --
+  -capMessage : String
+  +getCapMessage() : String
+}
+enum UserRole {
+  CITIZEN
+  DISPATCHER
+  FIELD_RESPONDER
+  PUBLIC_INFORMATION_OFFICER
+  ADMINISTRATOR
+  AUDITOR
+}
+
+' ----------------------------- relationships -----------------------------
+IncidentQueue "1" o-- "0..*" Incident : ordered by Severity.priority,\nthen victimCount (desc)
+Incident "1" *-- "1" AuditLog
+Incident "0..1" --> "0..8" Responder : assigned
+note on link
+  Responder.currentTaskingId : UUID
+  tracks this association by id
+  (not by object reference); a null
+  id means the Responder is available.
+end note
+Incident "*" --> "1" GpsCoordinate
+Incident "*" --> "1" HazardType
+Incident "*" --> "1" Severity
+Incident "*" --> "1" IncidentStatus
+Incident "*" --> "0..1" AlertTemplate : recommended
+User "*" --> "1" UserRole
+FireEmergencyService ..|> IPartnerAgency
+HospitalSystem ..|> IPartnerAgency
+ElectricityUtility ..|> IPartnerAgency
+TransportAuthority ..|> IPartnerAgency
+PoliceService ..|> IPartnerAgency
+WasteManagementService ..|> IPartnerAgency
+WaterUtility ..|> IPartnerAgency
+EducationDepartment ..|> IPartnerAgency
+
+@enduml

@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.SplitPane?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.VBox?>
+
+<!--
+  Dispatcher console (Assessment One's DispatchView; use cases UC-02 "Verify and
+  Triage", UC-03 "Allocate Resources"). Controller:
+  edu.cqu.drs.view.DispatchController. Styling comes from drs.css (attached at
+  scene level). Left pane = the incident queue; right pane (scrollable) = the
+  selected incident's detail, triage/resolve, the recommended alert template
+  (FR-CR-01), and the coordination controls (responder allocation, partner
+  notification).
+-->
+<SplitPane xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+           fx:controller="edu.cqu.drs.view.DispatchController"
+           dividerPositions="0.52">
+    <items>
+        <!-- Left pane: the incident queue, ordered most-urgent-first. -->
+        <VBox spacing="10.0" styleClass="dispatch-pane">
+            <padding>
+                <Insets bottom="16.0" left="16.0" right="16.0" top="16.0" />
+            </padding>
+            <children>
+                <Label styleClass="h2" text="Incident Queue (most urgent first)" />
+                <TableView fx:id="incidentTable" VBox.vgrow="ALWAYS">
+                    <columns>
+                        <TableColumn fx:id="refColumn" text="Ref" prefWidth="80.0" />
+                        <TableColumn fx:id="hazardColumn" text="Hazard" prefWidth="95.0" />
+                        <TableColumn fx:id="severityColumn" text="Severity" prefWidth="75.0" />
+                        <TableColumn fx:id="victimsColumn" text="Victims" prefWidth="60.0" />
+                        <TableColumn fx:id="statusColumn" text="Status" prefWidth="85.0" />
+                        <TableColumn fx:id="reportedColumn" text="Reported" prefWidth="80.0" />
+                    </columns>
+                </TableView>
+                <HBox spacing="10.0" alignment="CENTER_LEFT">
+                    <children>
+                        <Button fx:id="refreshButton" text="Refresh" onAction="#onRefresh" />
+                        <Label fx:id="queueSummaryLabel" styleClass="subtitle" text="0 incident(s)" />
+                    </children>
+                </HBox>
+            </children>
+        </VBox>
+
+        <!-- Right pane (scrollable): detail, triage/resolve, coordination. -->
+        <ScrollPane fitToWidth="true">
+            <content>
+                <VBox spacing="12.0" styleClass="dispatch-pane">
+                    <padding>
+                        <Insets bottom="16.0" left="16.0" right="16.0" top="16.0" />
+                    </padding>
+                    <children>
+                        <Label styleClass="h2" text="Selected Incident" />
+                        <GridPane hgap="12.0" vgap="8.0">
+                            <columnConstraints>
+                                <ColumnConstraints halignment="RIGHT" minWidth="125.0" />
+                                <ColumnConstraints hgrow="ALWAYS" minWidth="170.0" />
+                            </columnConstraints>
+                            <rowConstraints>
+                                <RowConstraints />
+                                <RowConstraints />
+                                <RowConstraints />
+                                <RowConstraints />
+                                <RowConstraints />
+                                <RowConstraints />
+                                <RowConstraints />
+                                <RowConstraints />
+                                <RowConstraints />
+                            </rowConstraints>
+                            <children>
+                                <Label text="Reference:" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+                                <Label fx:id="detailReferenceLabel" styleClass="value" text="-"
+                                       GridPane.columnIndex="1" GridPane.rowIndex="0" />
+                                <Label text="Hazard:" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+                                <Label fx:id="detailHazardLabel" styleClass="value" text="-"
+                                       GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                                <Label text="Severity:" GridPane.columnIndex="0" GridPane.rowIndex="2" />
+                                <Label fx:id="detailSeverityLabel" styleClass="value" text="-"
+                                       GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                                <Label text="People affected:" GridPane.columnIndex="0" GridPane.rowIndex="3" />
+                                <Label fx:id="detailVictimsLabel" styleClass="value" text="-"
+                                       GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                                <Label text="Status:" GridPane.columnIndex="0" GridPane.rowIndex="4" />
+                                <Label fx:id="detailStatusLabel" styleClass="value" text="-"
+                                       GridPane.columnIndex="1" GridPane.rowIndex="4" />
+                                <Label text="Reported at:" GridPane.columnIndex="0" GridPane.rowIndex="5" />
+                                <Label fx:id="detailReportedLabel" styleClass="value" text="-"
+                                       GridPane.columnIndex="1" GridPane.rowIndex="5" />
+                                <Label text="Location:" GridPane.columnIndex="0" GridPane.rowIndex="6" />
+                                <Label fx:id="detailLocationLabel" styleClass="value" text="-"
+                                       GridPane.columnIndex="1" GridPane.rowIndex="6" />
+                                <Label text="Responders:" GridPane.columnIndex="0" GridPane.rowIndex="7" />
+                                <Label fx:id="detailRespondersLabel" styleClass="value" text="-"
+                                       GridPane.columnIndex="1" GridPane.rowIndex="7" />
+                                <Label text="Recommended alert:" GridPane.columnIndex="0" GridPane.rowIndex="8" />
+                                <Label fx:id="detailRecommendedTemplateLabel" styleClass="value" text="-"
+                                       GridPane.columnIndex="1" GridPane.rowIndex="8" />
+                            </children>
+                        </GridPane>
+                        <Label text="Description:" />
+                        <TextArea fx:id="detailDescriptionArea" editable="false" wrapText="true"
+                                  prefRowCount="3" />
+                        <Separator />
+                        <HBox spacing="10.0" alignment="CENTER_LEFT">
+                            <children>
+                                <Label text="Set severity:" />
+                                <ComboBox fx:id="severityCombo" disable="true" />
+                                <Button fx:id="triageButton" text="Triage" onAction="#onTriage" disable="true" />
+                                <Button fx:id="resolveButton" text="Resolve" onAction="#onResolve" disable="true" />
+                            </children>
+                        </HBox>
+                        <Label fx:id="actionStatusLabel" wrapText="true" styleClass="status" />
+                        <Separator />
+                        <Label styleClass="h2" text="Coordination (FR-05, NFR-O04)" />
+                        <HBox spacing="10.0" alignment="CENTER_LEFT">
+                            <children>
+                                <Button fx:id="assignResponderButton" text="Assign Next Available Responder"
+                                        onAction="#onAssignResponder" disable="true" />
+                                <Button fx:id="notifyPartnersButton" text="Notify Partner Agencies"
+                                        onAction="#onNotifyPartners" disable="true" />
+                            </children>
+                        </HBox>
+                        <Label fx:id="coordinationStatusLabel" wrapText="true" styleClass="status" />
+                        <Label text="Partner agencies (NFR-O04 - all 8 stubbed):" />
+                        <TextArea fx:id="partnerLogArea" editable="false" wrapText="true"
+                                  prefRowCount="7" />
+                    </children>
+                </VBox>
+            </content>
+        </ScrollPane>
+    </items>
+</SplitPane>

@@ -1,0 +1,80 @@
+/*
+ * DRS-Initial - shared stylesheet.
+ *
+ * A plain, light, high-contrast scheme: clearly labelled controls,
+ * a visible focus ring, generous spacing. This is the accessibility baseline for
+ * Assessment One's NFR-P05 (WCAG 2.1 AA) - full conformance is out of scope for
+ * the prototype, but the visual language and the named style classes that the
+ * FXML views attach to (h1, h2, subtitle, value, status, status-ok,
+ * status-error, primary, placeholder, report-view, dispatch-pane, button-bar)
+ * are established here.
+ */
+
+.root {
+    -fx-font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    -fx-font-size: 13px;
+    -fx-background-color: #eef0f3;
+}
+
+.report-view {
+    -fx-background-color: white;
+}
+
+.dispatch-pane {
+    -fx-background-color: white;
+}
+
+.h2 {
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1b1f24;
+}
+
+.h1 {
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1b1f24;
+}
+
+.subtitle {
+    -fx-text-fill: #4a4f57;
+}
+
+.value {
+    -fx-font-weight: bold;
+    -fx-text-fill: #1b1f24;
+}
+
+.placeholder {
+    -fx-text-fill: #6b7280;
+    -fx-font-size: 14px;
+}
+
+.button-bar {
+    -fx-padding: 4 0 0 0;
+}
+
+.button.primary {
+    -fx-background-color: #1f6feb;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+}
+
+.button.primary:hover {
+    -fx-background-color: #1a5fd0;
+}
+
+.status {
+    -fx-font-size: 13px;
+    -fx-text-fill: #4a4f57;
+}
+
+.status-ok {
+    -fx-text-fill: #1a7f37;
+    -fx-font-weight: bold;
+}
+
+.status-error {
+    -fx-text-fill: #b3261e;
+    -fx-font-weight: bold;
+}
