@@ -1,10 +1,18 @@
 package edu.cqu.drs;
 
+import edu.cqu.drs.client.ClientSession;
 import edu.cqu.drs.model.TestRunReport;
+import edu.cqu.drs.model.UserRole;
 import edu.cqu.drs.presenter.SelfTestLauncher;
+import edu.cqu.drs.view.DispatchController;
+import edu.cqu.drs.view.LoginController;
+import edu.cqu.drs.view.ReportController;
+
 import java.io.IOException;
 import java.net.URL;
+import java.util.function.Consumer;
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -17,23 +25,29 @@ import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 
 /**
- * JavaFX application entry point for DRS-Initial (COIT20258 Assessment 2).
+ * JavaFX application entry point for the DRS-Enhanced <em>client</em>
+ * (COIT20258 Assessment 3).
  *
- * <p>Hosts the top-level {@link MenuBar} that navigates between the prototype's
- * views, swapping the {@link BorderPane} centre, so that every implemented
- * capability is reachable in the running application:</p>
+ * <p>The client boots to the login view; every operation beyond that point runs
+ * over one session-scoped server connection. After a successful login the shell
+ * builds a <strong>role-adapted</strong> {@link MenuBar} - mirroring the
+ * server's own authorisation gate, so the UI never offers an action the server
+ * would deny:</p>
  * <ul>
- *   <li><b>File -> Report a Disaster</b>  -  the citizen-report view,
- *       loaded from {@code report.fxml} (criterion 1); the application opens
- *       on this view.</li>
- *   <li><b>View -> Dispatcher Console</b>  -  the triage/dispatch view,
- *       loaded from {@code dispatch.fxml}: the incident queue, triage and
- *       resolution (criterion 2), field-responder allocation (FR-05), and
- *       partner-agency notification (NFR-O04).</li>
- *   <li><b>Tools -> Run Self-Tests</b>  -  runs the in-GUI self-test
- *       suite ({@code SelfTestLauncher}) and shows the result in a dialog
- *       (creative feature FR-CR-02).</li>
+ *   <li><b>File -&gt; Report a Disaster</b> - every role (the citizen
+ *       surface); reports travel to the server.</li>
+ *   <li><b>View -&gt; Dispatcher Console</b> - DISPATCHER / ADMINISTRATOR
+ *       only: triage, allocation and resolution, all performed on the
+ *       server.</li>
+ *   <li><b>Tools -&gt; Run Self-Tests</b> - the inherited in-GUI self-test
+ *       suite (creative feature FR-CR-02).</li>
+ *   <li><b>Session -&gt; Sign out</b> - ends the server session and returns
+ *       to the login view.</li>
  * </ul>
+ *
+ * <p>Network calls never run on the FX Application Thread: the session's
+ * callback dispatcher is pointed at {@link Platform#runLater(Runnable)} once,
+ * here, so every view's server callback lands on the FX thread.</p>
  *
  * @author Fabian Roberto Guzman (12287570)
  */
@@ -41,13 +55,16 @@ public class App extends Application {
 
     /** Window title shown in the stage's title bar. */
     private static final String WINDOW_TITLE =
-            "DRS-Initial - Disaster Response System";
+            "DRS-Enhanced - Disaster Response System";
 
     /** Default window width in pixels. */
     private static final double DEFAULT_WIDTH = 1000;
 
     /** Default window height in pixels. */
     private static final double DEFAULT_HEIGHT = 660;
+
+    /** Classpath location of the login FXML. */
+    private static final String LOGIN_FXML = "/edu/cqu/drs/view/login.fxml";
 
     /** Classpath location of the citizen-report FXML. */
     private static final String REPORT_FXML = "/edu/cqu/drs/view/report.fxml";
@@ -62,10 +79,12 @@ public class App extends Application {
     /** The application root; its centre is swapped on each navigation. */
     private BorderPane root;
 
+    /** The live server session, or null while the login view is showing. */
+    private ClientSession session;
+
     /**
-     * Builds and shows the primary stage: a {@link BorderPane} with the
-     * navigation {@link MenuBar} at the top and the citizen-report view in the
-     * centre.
+     * Builds and shows the primary stage, opening on the login view. The rest
+     * of the UI is constructed only after a successful login.
      *
      * @param primaryStage the primary stage supplied by the JavaFX runtime
      *                     (never null).
@@ -73,47 +92,104 @@ public class App extends Application {
     @Override
     public void start(Stage primaryStage) {
         this.root = new BorderPane();
-        this.root.setTop(buildMenuBar());
-        this.root.setCenter(loadView(REPORT_FXML));
+        showLogin();
 
         Scene scene = new Scene(this.root, DEFAULT_WIDTH, DEFAULT_HEIGHT);
         applyStylesheet(scene);
         primaryStage.setTitle(WINDOW_TITLE);
         primaryStage.setScene(scene);
+        primaryStage.setOnCloseRequest(event -> endSession(null));
         primaryStage.show();
     }
 
     /**
-     * Constructs the navigation menu bar (File / View / Tools). "Report a
-     * Disaster" loads {@code report.fxml}; "Dispatcher Console" loads
-     * {@code dispatch.fxml}; "Run Self-Tests" runs the in-GUI self-test
-     * suite (see {@link #runSelfTests()}).
+     * Shows the login view (clearing any menu bar) and registers the
+     * logged-in callback that builds the operations UI.
+     */
+    private void showLogin() {
+        this.root.setTop(null);
+        this.root.setCenter(loadView(LOGIN_FXML,
+                (LoginController controller) ->
+                        controller.setOnLoginSuccess(this::onLoggedIn)));
+    }
+
+    /**
+     * Takes over after a successful login: routes every session callback to the
+     * FX thread, then builds the role-adapted menu and opens the report view.
+     *
+     * @param newSession the connected, authenticated session (never null).
+     */
+    private void onLoggedIn(ClientSession newSession) {
+        this.session = newSession;
+        this.session.setCallbackDispatcher(Platform::runLater);
+        this.root.setTop(buildMenuBar());
+        this.root.setCenter(loadView(REPORT_FXML,
+                (ReportController controller) -> controller.init(this.session)));
+    }
+
+    /**
+     * Constructs the role-adapted navigation menu bar. The dispatcher console
+     * is offered only to the roles the server's authorisation gate admits to
+     * the dispatch actions (DISPATCHER and ADMINISTRATOR).
      *
      * @return the populated {@link MenuBar}.
      */
     private MenuBar buildMenuBar() {
         Menu fileMenu = new Menu("File");
         MenuItem reportItem = new MenuItem("Report a Disaster");
-        reportItem.setOnAction(e -> this.root.setCenter(loadView(REPORT_FXML)));
+        reportItem.setOnAction(e -> this.root.setCenter(loadView(REPORT_FXML,
+                (ReportController controller) -> controller.init(this.session))));
         fileMenu.getItems().add(reportItem);
 
-        Menu viewMenu = new Menu("View");
-        MenuItem dispatchItem = new MenuItem("Dispatcher Console");
-        dispatchItem.setOnAction(
-                e -> this.root.setCenter(loadView(DISPATCH_FXML)));
-        viewMenu.getItems().add(dispatchItem);
+        MenuBar menuBar = new MenuBar(fileMenu);
+
+        UserRole role = this.session.getRole();
+        if (role == UserRole.DISPATCHER || role == UserRole.ADMINISTRATOR) {
+            Menu viewMenu = new Menu("View");
+            MenuItem dispatchItem = new MenuItem("Dispatcher Console");
+            dispatchItem.setOnAction(e -> this.root.setCenter(loadView(DISPATCH_FXML,
+                    (DispatchController controller) -> controller.init(this.session))));
+            viewMenu.getItems().add(dispatchItem);
+            menuBar.getMenus().add(viewMenu);
+        }
 
         Menu toolsMenu = new Menu("Tools");
         MenuItem selfTestItem = new MenuItem("Run Self-Tests");
         selfTestItem.setOnAction(e -> runSelfTests());
         toolsMenu.getItems().add(selfTestItem);
+        menuBar.getMenus().add(toolsMenu);
 
-        // All eight partner agencies named in Assessment One section 2.1 /
-        // NFR-O04 are implemented via the IPartnerAgency interface. Adding a
-        // ninth agency is a new class implementing IPartnerAgency plus a single
-        // line in AppContext; the notifier itself does not change.
+        Menu sessionMenu = new Menu("Signed in as "
+                + this.session.getUser().getUsername() + " (" + role + ")");
+        MenuItem signOutItem = new MenuItem("Sign out");
+        signOutItem.setOnAction(e -> endSession(this::showLogin));
+        sessionMenu.getItems().add(signOutItem);
+        menuBar.getMenus().add(sessionMenu);
 
-        return new MenuBar(fileMenu, viewMenu, toolsMenu);
+        return menuBar;
+    }
+
+    /**
+     * Ends the live session, if any, off the FX thread (best-effort logout,
+     * then connection close), and optionally continues with a follow-up action.
+     *
+     * @param andThen what to do once the session is closed (run on the FX
+     *                thread), or null for nothing (window close).
+     */
+    private void endSession(Runnable andThen) {
+        ClientSession ending = this.session;
+        this.session = null;
+        // Tear the session UI down immediately so no menu item can fire against
+        // a session that is signing out (the close itself completes off-thread).
+        this.root.setTop(null);
+        this.root.setCenter(placeholder("Signing out..."));
+        if (ending == null) {
+            if (andThen != null) {
+                andThen.run();
+            }
+            return;
+        }
+        ending.signOut(andThen != null ? andThen : () -> { });
     }
 
     /**
@@ -141,21 +217,33 @@ public class App extends Application {
     }
 
     /**
-     * Loads an FXML view from the classpath.
+     * Loads an FXML view from the classpath and hands its controller to the
+     * given initialiser - the injection seam that gives each view the shared
+     * {@link ClientSession} while the FXML keeps its {@code fx:controller}
+     * attribute.
      *
+     * @param <C>          the controller type declared by the FXML.
      * @param resourcePath the classpath location of the FXML (never null).
+     * @param initialiser  receives the loaded controller (never null).
      * @return the loaded view's root node, or a placeholder label if the
      *         resource cannot be found or loaded.
      */
-    private Parent loadView(String resourcePath) {
+    private <C> Parent loadView(String resourcePath, Consumer<C> initialiser) {
         URL location = getClass().getResource(resourcePath);
         if (location == null) {
             return placeholder("Could not find " + resourcePath
                     + " on the classpath.");
         }
         try {
-            return FXMLLoader.load(location);
-        } catch (IOException ex) {
+            FXMLLoader loader = new FXMLLoader(location);
+            Parent view = loader.load();
+            C controller = loader.getController();
+            if (controller == null) {
+                return placeholder(resourcePath + " declares no fx:controller.");
+            }
+            initialiser.accept(controller);
+            return view;
+        } catch (IOException | ClassCastException ex) {
             return placeholder("Could not load " + resourcePath + ": "
                     + ex.getMessage());
         }

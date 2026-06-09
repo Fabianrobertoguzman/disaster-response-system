@@ -129,7 +129,7 @@
                             <children>
                                 <Button fx:id="assignResponderButton" text="Assign Next Available Responder"
                                         onAction="#onAssignResponder" disable="true" />
-                                <Button fx:id="notifyPartnersButton" text="Notify Partner Agencies"
+                                <Button fx:id="notifyPartnersButton" text="Notify Partner Agencies (local stub)"
                                         onAction="#onNotifyPartners" disable="true" />
                             </children>
                         </HBox>

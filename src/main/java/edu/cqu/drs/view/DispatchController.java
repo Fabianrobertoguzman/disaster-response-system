@@ -1,13 +1,14 @@
 package edu.cqu.drs.view;
 
+import edu.cqu.drs.client.ClientSession;
+import edu.cqu.drs.client.DispatchClientPresenter;
 import edu.cqu.drs.model.AlertTemplate;
 import edu.cqu.drs.model.Incident;
-import edu.cqu.drs.model.IncidentQueue;
 import edu.cqu.drs.model.Responder;
 import edu.cqu.drs.model.Severity;
 import edu.cqu.drs.presenter.AppContext;
-import edu.cqu.drs.presenter.DispatchPresenter;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.Map;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
@@ -23,16 +24,19 @@ import javafx.scene.control.TextArea;
  * FXML controller for the dispatcher console ({@code dispatch.fxml}).
  *
  * <p>Realises Assessment One's {@code DispatchView} and use cases UC-02
- * (Verify and Triage) and UC-03 (Allocate Resources). The left pane is the
- * incident queue, ordered most-urgent-first; selecting a row shows that
- * incident in the right pane, where the dispatcher can set its severity (which
- * re-orders the queue), mark it resolved, allocate a field responder (FR-05),
- * or notify the partner agencies (NFR-O04). Triage, allocation and resolution
- * are delegated to {@link DispatchPresenter}; partner notification to
- * {@link edu.cqu.drs.presenter.PartnerNotifier}; this class only reads and
- * writes JavaFX controls. The prototype has no live updates, so a "Refresh"
- * button re-pulls the queue (picking up incidents filed from the
- * citizen-report view).</p>
+ * (Verify and Triage) and UC-03 (Allocate Resources) over the
+ * <em>client/server</em> path: the queue is pulled from the server, and triage,
+ * allocation and resolution are performed on the server through the session's
+ * {@link DispatchClientPresenter}. Every server call runs off the FX
+ * Application Thread via {@link ClientSession#runAsync}, with the triggering
+ * button disabled while a call is in flight. The "Refresh" button re-pulls the
+ * queue, picking up incidents filed by <em>other clients</em> - the
+ * multi-dispatcher view of shared server state.</p>
+ *
+ * <p>Partner-agency notification (NFR-O04) is the one deliberately
+ * <em>local</em> action: there is no partner wire action in this build, so the
+ * button is labelled a local stub and drives the in-process
+ * {@link edu.cqu.drs.presenter.PartnerNotifier} only.</p>
  *
  * @author Fabian Roberto Guzman (12287570)
  */
@@ -79,7 +83,7 @@ public class DispatchController {
     @FXML
     private TableColumn<Incident, String> reportedColumn;
 
-    /** Re-pulls the queue into the table. */
+    /** Re-pulls the queue from the server into the table. */
     @FXML
     private Button refreshButton;
 
@@ -147,7 +151,7 @@ public class DispatchController {
     @FXML
     private Button assignResponderButton;
 
-    /** Notifies the partner agencies of the selected incident. */
+    /** Notifies the partner agencies of the selected incident (local stub). */
     @FXML
     private Button notifyPartnersButton;
 
@@ -163,71 +167,109 @@ public class DispatchController {
     private TextArea partnerLogArea;
 
     /**
-     * The shared application context: the incident queue, the responder
-     * roster, and the partner notifier.
+     * The in-process application context, retained ONLY for the local
+     * partner-notifier stub (the incident queue and responder roster it also
+     * holds are no longer wired into this client/server build).
      */
     private final AppContext appContext;
 
-    /**
-     * Coordinates triage, allocation and resolution against the incident queue.
-     */
-    private final DispatchPresenter presenter;
+    /** The shared server session; injected by the shell after loading. */
+    private ClientSession session;
+
+    /** Performs the dispatch actions on the server; created on injection. */
+    private DispatchClientPresenter presenter;
 
     /** The incident currently selected in the table, or null. */
     private Incident selected;
 
     /**
-     * Creates the controller, wiring it to the application context and a
-     * {@link DispatchPresenter}. Instantiated by the
-     * {@link javafx.fxml.FXMLLoader} via this no-argument constructor named by
-     * the {@code fx:controller} attribute in {@code dispatch.fxml}.
+     * Creates the controller. Instantiated by the {@link javafx.fxml.FXMLLoader}
+     * via this no-argument constructor named by the {@code fx:controller}
+     * attribute in {@code dispatch.fxml}; the live server session is injected
+     * afterwards through {@link #init(ClientSession)}.
      */
     public DispatchController() {
         this.appContext = AppContext.getInstance();
-        IncidentQueue queue = this.appContext.getIncidentQueue();
-        this.presenter = new DispatchPresenter(queue);
+    }
+
+    /**
+     * Injects the live server session and pulls the initial queue. Called by
+     * the application shell right after the FXML is loaded.
+     *
+     * @param session the connected, authenticated session (must not be null).
+     * @throws IllegalArgumentException if {@code session} is null.
+     */
+    public void init(ClientSession session) {
+        if (session == null) {
+            throw new IllegalArgumentException("session must not be null");
+        }
+        this.session = session;
+        this.presenter = new DispatchClientPresenter(session.getServerStub());
+        onRefresh();
     }
 
     /**
      * Initialises the view after the FXML is loaded: configures the table
      * columns, populates the severity selector, lists the partner agencies,
-     * wires the selection listener, and loads the current queue.
+     * and wires the selection listener. The first queue pull happens when the
+     * session is injected ({@link #init(ClientSession)}).
      */
     @FXML
     private void initialize() {
         configureColumns();
         this.severityCombo.setItems(
                 FXCollections.observableArrayList(Severity.values()));
-        this.partnerLogArea.setText(String.join("\n",
-                this.appContext.getPartnerNotifier().describeAgencies()));
+        this.partnerLogArea.setText("Local stub - no server round-trip.\n"
+                + String.join("\n",
+                        this.appContext.getPartnerNotifier().describeAgencies()));
         this.incidentTable.getSelectionModel().selectedItemProperty()
                 .addListener((obs, old, sel) -> onSelectionChanged(sel));
-        onRefresh();
         this.actionStatusLabel.setText("");
         this.coordinationStatusLabel.setText("");
     }
 
     /**
-     * Re-pulls the incident queue into the table (most-urgent-first), keeping
+     * Re-pulls the incident queue from the server (most-urgent-first), keeping
      * the current selection if that incident is still present. Handler for the
-     * "Refresh" button.
+     * "Refresh" button; also called after each mutating action.
      */
     @FXML
     private void onRefresh() {
+        if (this.presenter == null) {
+            return;
+        }
+        this.refreshButton.setDisable(true);
+        this.session.runAsync(this.presenter::pendingIncidents,
+                this::showQueue,
+                failure -> {
+                    this.refreshButton.setDisable(false);
+                    showAction("Could not refresh the queue: "
+                            + failure.getMessage(), false);
+                });
+    }
+
+    /**
+     * Replaces the table contents with a fresh server snapshot (FX thread),
+     * restoring the selection when the same incident is still present.
+     *
+     * @param incidents the server's incidents, most urgent first.
+     */
+    private void showQueue(List<Incident> incidents) {
         Incident keep = this.selected;
-        this.incidentTable.getItems().setAll(this.presenter.pendingIncidents());
-        this.queueSummaryLabel.setText(
-                this.presenter.pendingCount() + " incident(s)");
+        this.incidentTable.getItems().setAll(incidents);
+        this.queueSummaryLabel.setText(incidents.size() + " incident(s)");
         if (keep != null && this.incidentTable.getItems().contains(keep)) {
             this.incidentTable.getSelectionModel().select(keep);
         } else {
             this.incidentTable.getSelectionModel().clearSelection();
         }
+        this.refreshButton.setDisable(false);
     }
 
     /**
-     * Applies the severity chosen in the combo to the selected incident, which
-     * re-orders the queue. Handler for the "Triage" button.
+     * Applies the severity chosen in the combo to the selected incident on the
+     * server, and asks it for the recommended alert template (FR-CR-01).
+     * Handler for the "Triage" button.
      */
     @FXML
     private void onTriage() {
@@ -241,16 +283,28 @@ public class DispatchController {
             return;
         }
         Incident incident = this.selected;
-        this.presenter.triage(incident, severity);
-        AlertTemplate template = this.presenter.recommendTemplate(incident);
-        onRefresh();
-        this.incidentTable.getSelectionModel().select(incident);
-        showAction("Severity set to " + severity + "; recommended alert: "
-                + template + ".", true);
+        this.triageButton.setDisable(true);
+        this.session.runAsync(() -> {
+            this.presenter.triage(incident.getId(), severity);
+            return this.presenter.recommendTemplate(incident.getId());
+        }, template -> {
+            this.triageButton.setDisable(false);
+            onRefresh();
+            showAction("Severity set to " + severity + "; recommended alert: "
+                    + template + ".", true);
+        }, failure -> {
+            this.triageButton.setDisable(false);
+            // The severity may already have been applied when the follow-up
+            // recommendation failed, so re-pull the authoritative state.
+            onRefresh();
+            showAction("Could not complete the triage: "
+                    + failure.getMessage(), false);
+        });
     }
 
     /**
-     * Marks the selected incident resolved. Handler for the "Resolve" button.
+     * Marks the selected incident resolved on the server. Handler for the
+     * "Resolve" button.
      */
     @FXML
     private void onResolve() {
@@ -259,16 +313,23 @@ public class DispatchController {
             return;
         }
         Incident incident = this.selected;
-        this.presenter.resolve(incident);
-        onRefresh();
-        this.incidentTable.getSelectionModel().select(incident);
-        showAction("Incident " + shortRef(incident) + " marked resolved.",
-                true);
+        this.resolveButton.setDisable(true);
+        this.session.runAsync(() -> this.presenter.resolve(incident.getId()),
+                resolved -> {
+                    this.resolveButton.setDisable(false);
+                    onRefresh();
+                    showAction("Incident " + shortRef(resolved)
+                            + " marked resolved.", true);
+                }, failure -> {
+                    this.resolveButton.setDisable(false);
+                    showAction("Could not resolve: " + failure.getMessage(), false);
+                });
     }
 
     /**
-     * Allocates the next available field responder to the selected incident
-     * (FR-05). Handler for the "Assign Next Available Responder" button.
+     * Allocates the next available field responder (from the server's roster)
+     * to the selected incident (FR-05). Handler for the "Assign Next Available
+     * Responder" button.
      */
     @FXML
     private void onAssignResponder() {
@@ -276,28 +337,39 @@ public class DispatchController {
             showCoordination("Select an incident in the queue first.", false);
             return;
         }
-        Responder responder = nextAvailableResponder();
-        if (responder == null) {
-            showCoordination("No responders are currently available.", false);
-            return;
-        }
-        try {
-            this.presenter.assignResponder(this.selected, responder);
-        } catch (IllegalArgumentException | IllegalStateException ex) {
+        Incident incident = this.selected;
+        java.util.concurrent.atomic.AtomicReference<String> assignedName =
+                new java.util.concurrent.atomic.AtomicReference<>("responder");
+        this.assignResponderButton.setDisable(true);
+        this.session.runAsync(() -> {
+            Responder responder = nextAvailable(this.presenter.listResponders());
+            if (responder == null) {
+                throw new IllegalStateException(
+                        "No responders are currently available.");
+            }
+            assignedName.set(responder.getName());
+            return this.presenter.assignResponder(
+                    incident.getId(), responder.getId());
+        }, updated -> {
+            this.assignResponderButton.setDisable(false);
+            this.selected = updated;
+            showDetail(updated);
+            showCoordination("Assigned " + assignedName.get()
+                    + "; incident now has " + updated.getResponders().size()
+                    + " responder(s).", true);
+        }, failure -> {
+            this.assignResponderButton.setDisable(false);
             showCoordination("Could not assign responder: "
-                    + ex.getMessage(), false);
-            return;
-        }
-        showDetail(this.selected);
-        showCoordination("Assigned " + responder.getName()
-                + "; incident now has " + this.selected.getResponders().size()
-                + " responder(s).", true);
+                    + failure.getMessage(), false);
+        });
     }
 
     /**
      * Notifies every partner agency of the selected incident and shows the
-     * per-agency acknowledgement result (NFR-O04). Handler for the "Notify
-     * Partner Agencies" button.
+     * per-agency acknowledgement result (NFR-O04). This is a deliberate LOCAL
+     * stub - no partner wire action exists in this build, so the in-process
+     * notifier is used and the view says so. Handler for the "Notify Partner
+     * Agencies (local stub)" button.
      */
     @FXML
     private void onNotifyPartners() {
@@ -308,7 +380,8 @@ public class DispatchController {
         Map<String, Boolean> result =
                 this.appContext.getPartnerNotifier().notifyAll(this.selected);
         long acknowledged = result.values().stream().filter(b -> b).count();
-        StringBuilder text = new StringBuilder("Partner agencies:\n");
+        StringBuilder text = new StringBuilder(
+                "Local stub - no server round-trip.\nPartner agencies:\n");
         for (String line : this.appContext.getPartnerNotifier()
                 .describeAgencies()) {
             text.append("  ").append(line).append("\n");
@@ -318,8 +391,8 @@ public class DispatchController {
         result.forEach((name, ack) -> text.append("  ").append(name)
                 .append(": ").append(ack ? "ACK" : "NO ACK").append("\n"));
         this.partnerLogArea.setText(text.toString());
-        showCoordination("Notified " + result.size() + " partner agencies; "
-                + acknowledged + " acknowledged.", true);
+        showCoordination("Notified " + result.size() + " partner agencies "
+                + "(local stub); " + acknowledged + " acknowledged.", true);
     }
 
     /**
@@ -398,13 +471,14 @@ public class DispatchController {
     }
 
     /**
-     * Returns the first available responder in the roster, or null if every
-     * responder is currently tasked.
+     * Returns the first available responder in the server's roster, or null if
+     * every responder is currently tasked.
      *
+     * @param roster the server's responder roster.
      * @return an available {@link Responder}, or null.
      */
-    private Responder nextAvailableResponder() {
-        for (Responder responder : this.appContext.getResponderRoster()) {
+    private static Responder nextAvailable(List<Responder> roster) {
+        for (Responder responder : roster) {
             if (responder.isAvailable()) {
                 return responder;
             }

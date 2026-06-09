@@ -1,19 +1,22 @@
 /**
- * Business tier - coordination logic mediating between the JavaFX controllers and the domain model.
+ * The inherited single-process coordination tier of the DRS-Initial prototype,
+ * retained in DRS-Enhanced for the components that remain deliberately local.
  *
- * <p>The presenters ({@code ReportPresenter}, {@code DispatchPresenter}) and the coordination helpers
- * ({@code AppContext}, {@code PartnerNotifier}, {@code AlertTemplateRecommender},
- * {@code SelfTestLauncher}) live here. Controllers in {@code edu.cqu.drs.view} delegate to these
- * classes; these classes operate on {@code edu.cqu.drs.model} entities and never touch JavaFX
- * directly. This follows the MVP variant of MVC that JavaFX with FXML naturally encourages.</p>
+ * <p>In the enhanced client/server build the live views no longer route through
+ * the in-process presenters: the report and dispatch use cases travel to the
+ * server via {@code edu.cqu.drs.client} (the session-scoped {@code ServerStub}
+ * and its client-side presenters), and the business logic those presenters used
+ * to host now lives in the server's {@code edu.cqu.drs.server.service} tier.</p>
  *
- * <p>{@code AppContext} holds the prototype's shared in-memory state (the incident queue, the
- * responder roster, the partner notifier). {@code PartnerNotifier} performs priority-ordered fan-out
- * to the registered {@code IPartnerAgency} implementations, collects their acknowledgements (one
- * retry on a non-ack), and records each notification in both the incident's {@code AuditLog} and its
- * own log. {@code AlertTemplateRecommender} is creative feature FR-CR-01 (the rule-driven CAP-alert
- * recommender). {@code SelfTestLauncher} is creative feature FR-CR-02 (it runs an in-process suite
- * of smoke checks against the domain model and returns a {@code TestRunReport}).</p>
+ * <p>What stays in active use here: {@code PartnerNotifier} (the NFR-O04
+ * partner-agency fan-out, an honest <em>local stub</em> in this build - there is
+ * no partner wire action), {@code AlertTemplateRecommender} (creative feature
+ * FR-CR-01, now invoked by the server's {@code IncidentService}), and
+ * {@code SelfTestLauncher} (creative feature FR-CR-02, the in-GUI smoke suite).
+ * {@code ReportPresenter}, {@code DispatchPresenter} and {@code AppContext}'s
+ * in-memory queue/roster are kept as the documented A2 baseline - exercised by
+ * their unit tests and the self-test suite - but are no longer wired into the
+ * running client.</p>
  *
  * @author Fabian Roberto Guzman (12287570)
  */

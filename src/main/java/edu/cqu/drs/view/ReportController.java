@@ -1,11 +1,10 @@
 package edu.cqu.drs.view;
 
+import edu.cqu.drs.client.ClientSession;
+import edu.cqu.drs.client.ReportClientPresenter;
 import edu.cqu.drs.model.GpsCoordinate;
 import edu.cqu.drs.model.HazardType;
 import edu.cqu.drs.model.Incident;
-import edu.cqu.drs.model.IncidentQueue;
-import edu.cqu.drs.presenter.AppContext;
-import edu.cqu.drs.presenter.ReportPresenter;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
@@ -22,10 +21,15 @@ import javafx.scene.control.Tooltip;
  * <p>Realises Assessment One's {@code ReportView} and use case UC-01
  * ("Report Disaster"): a citizen picks a hazard type, the system captures the
  * location and time automatically (FR-02), the citizen adds a description and an
- * optional estimate of people affected, and on submit the system files an
- * {@link Incident} and shows an acknowledgement carrying the incident reference
- * (FR-03). All coordination is delegated to {@link ReportPresenter}; this class
- * only reads and writes JavaFX controls.</p>
+ * optional estimate of people affected, and on submit the report is filed on the
+ * <em>server</em> through the session's {@link ReportClientPresenter}; the
+ * acknowledgement carries the server-assigned incident reference (FR-03).</p>
+ *
+ * <p>The blocking server call runs off the FX Application Thread via
+ * {@link ClientSession#runAsync}; the submit button is disabled while a call is
+ * in flight, and the result lands back on the FX thread through the session's
+ * callback dispatcher. The shell injects the session via {@link
+ * #init(ClientSession)} right after the FXML is loaded.</p>
  *
  * @author Fabian Roberto Guzman (12287570)
  */
@@ -46,8 +50,8 @@ public class ReportController {
     private Label locationLabel;
 
     /**
-     * Shows the GPS-fix status. In DRS-Initial the captured location is a
-     * simulated sample coordinate, not the device's real GPS (NFR-P06).
+     * Shows the GPS-fix status. The captured location is a simulated sample
+     * coordinate, not the device's real GPS (NFR-P06).
      */
     @FXML
     private Label gpsStatusLabel;
@@ -62,8 +66,8 @@ public class ReportController {
 
     /**
      * Photo-attachment button. Photo upload is one of Assessment One's FR-01
-     * report fields; in DRS-Initial it is deferred to Assessment 3, so clicking
-     * this button explains the deferral rather than attaching a file.
+     * report fields; it remains deferred, so clicking this button explains the
+     * deferral rather than attaching a file.
      */
     @FXML
     private Button attachPhotoButton;
@@ -80,21 +84,29 @@ public class ReportController {
     @FXML
     private Label statusLabel;
 
-    /** Coordinates the report against the shared incident queue. */
-    private final ReportPresenter presenter;
+    /** The shared server session; injected by the shell after loading. */
+    private ClientSession session;
+
+    /** Files the report on the server; created when the session is injected. */
+    private ReportClientPresenter presenter;
 
     /** The location captured for the report currently being entered. */
     private GpsCoordinate capturedLocation;
 
     /**
-     * Creates the controller, wiring it to a {@link ReportPresenter} over the
-     * application-wide incident queue. The {@link javafx.fxml.FXMLLoader}
-     * instantiates this class via this no-argument constructor, named by the
-     * {@code fx:controller} attribute in {@code report.fxml}.
+     * Injects the live server session. Called by the application shell right
+     * after the FXML is loaded (the {@link javafx.fxml.FXMLLoader} itself uses
+     * the no-argument constructor named by {@code fx:controller}).
+     *
+     * @param session the connected, authenticated session (must not be null).
+     * @throws IllegalArgumentException if {@code session} is null.
      */
-    public ReportController() {
-        IncidentQueue queue = AppContext.getInstance().getIncidentQueue();
-        this.presenter = new ReportPresenter(queue);
+    public void init(ClientSession session) {
+        if (session == null) {
+            throw new IllegalArgumentException("session must not be null");
+        }
+        this.session = session;
+        this.presenter = new ReportClientPresenter(session.getServerStub());
     }
 
     /**
@@ -106,9 +118,9 @@ public class ReportController {
         this.hazardTypeCombo.setItems(
                 FXCollections.observableArrayList(HazardType.values()));
         this.locationLabel.setTooltip(new Tooltip(
-                "DRS-Initial uses a fixed sample coordinate (near CQU's "
-                + "Rockhampton campus). Capturing the device's real GPS "
-                + "satisfies FR-02 / NFR-P06 but is deferred to Assessment 3."));
+                "The prototype uses a fixed sample coordinate (near CQU's "
+                + "Rockhampton campus) standing in for a real device-GPS read "
+                + "(FR-02 / NFR-P06)."));
         captureLocation();
         this.statusLabel.setText("");
     }
@@ -120,24 +132,23 @@ public class ReportController {
     }
 
     /**
-     * Explains that photo attachment is deferred to Assessment 3. Handler for
-     * the "Attach Photo..." button.
+     * Explains that photo attachment is deferred. Handler for the
+     * "Attach Photo..." button.
      */
     @FXML
     private void onAttachPhoto() {
         Alert notice = new Alert(Alert.AlertType.INFORMATION,
                 "Photo attachment is one of Assessment One's FR-01 report "
-                + "fields. It needs durable storage, so it is deferred to "
-                + "Assessment 3; in this prototype the report is filed "
-                + "without a photo.");
-        notice.setHeaderText("Photo attachment - planned for Assessment 3");
+                + "fields. It needs durable binary storage, so it remains "
+                + "deferred; the report is filed without a photo.");
+        notice.setHeaderText("Photo attachment - deferred");
         notice.showAndWait();
     }
 
     /**
-     * Validates the form, files an {@link Incident} via the presenter, and shows
-     * an acknowledgement carrying the incident reference and the time taken
-     * (FR-03). Handler for the "Submit Report" button.
+     * Validates the form and files the report on the server (off the FX
+     * thread), showing an acknowledgement with the server-assigned reference
+     * and the round-trip time (FR-03). Handler for the "Submit Report" button.
      */
     @FXML
     private void onSubmit() {
@@ -162,19 +173,37 @@ public class ReportController {
             showError("People affected cannot be negative.");
             return;
         }
-        try {
-            long startNanos = System.nanoTime();
-            Incident reported = this.presenter.submitIncident(
-                    hazardType, this.capturedLocation, description, victimCount);
-            long elapsedMs = (System.nanoTime() - startNanos) / 1_000_000L;
-            showOk("Report filed. Reference " + reported.getId()
-                    + " - acknowledged in " + elapsedMs + " ms. "
-                    + this.presenter.queueSize()
-                    + " incident(s) awaiting triage.");
-            resetForm();
-        } catch (IllegalArgumentException ex) {
-            showError("Could not file the report: " + ex.getMessage());
+        if (this.presenter == null) {
+            showError("Not connected to the server. Sign in first.");
+            return;
         }
+
+        GpsCoordinate location = this.capturedLocation;
+        long startNanos = System.nanoTime();
+        this.submitButton.setDisable(true);
+        this.session.runAsync(
+                () -> this.presenter.submitIncident(
+                        hazardType, location, description, victimCount),
+                reported -> onSubmitted(reported, startNanos),
+                failure -> {
+                    this.submitButton.setDisable(false);
+                    showError("Could not file the report: " + failure.getMessage());
+                });
+    }
+
+    /**
+     * Completes a successful submission on the FX thread: shows the
+     * acknowledgement and resets the form.
+     *
+     * @param reported   the incident as persisted by the server.
+     * @param startNanos when the submission started, for the round-trip time.
+     */
+    private void onSubmitted(Incident reported, long startNanos) {
+        long elapsedMs = (System.nanoTime() - startNanos) / 1_000_000L;
+        this.submitButton.setDisable(false);
+        showOk("Report filed. Reference " + reported.getId()
+                + " - acknowledged by the server in " + elapsedMs + " ms.");
+        resetForm();
     }
 
     /** Clears all fields and the status line. Handler for the "Clear" button. */
@@ -185,8 +214,8 @@ public class ReportController {
     }
 
     /**
-     * Captures the current device location (a fixed Rockhampton stub in
-     * DRS-Initial) and updates the location and GPS-status labels.
+     * Captures the current device location (a fixed Rockhampton stub) and
+     * updates the location and GPS-status labels.
      */
     private void captureLocation() {
         this.capturedLocation = GpsCoordinate.captureCurrentLocation();
