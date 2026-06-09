@@ -33,6 +33,18 @@ mvn javafx:run           # launch the client (use the javafx-maven-plugin goal, 
 - **Schema and reference data** ship as SQL scripts at `src/main/resources/db/schema.sql` and `src/main/resources/db/seed.sql`. They are applied programmatically at start-up (the schema is dropped and recreated so a stale database cannot keep old definitions), and can also be run by hand to inspect or set up the database. A bundled copy of `db.properties` is also packaged on the classpath as a last-resort default, so the project compiles and runs from a clean extract on a fresh machine.
 - The JUnit suite contains DAO integration tests that exercise real JDBC; when no MySQL server is reachable they are **skipped** (not failed), so `mvn test` still produces a green build on a database-free machine.
 
+### Testing
+
+```
+mvn test                 # full suite; MySQL-gated specs SKIP (yellow) when no database is reachable
+mvn test -Ptest-h2       # selects the in-memory H2 (MySQL-mode) substrate for the database-backed
+                         # tests that support it (adopted incrementally; see docs/test/H2_NOT_A_DROPIN.md)
+```
+
+- A **skipped** test is never reported as a pass — see `docs/test/SKIPPED_VS_PASSED_POLICY.md`.
+- The H2 path uses a dedicated DDL (`src/test/resources/db/schema-h2.sql`) because H2 is **not** a MySQL drop-in; the dialect caveats are in `docs/test/H2_NOT_A_DROPIN.md`.
+- Test-plan ACTUALs and evidence screenshots are captured per `docs/test/CAPTURE_ENVIRONMENT.md`.
+
 ### Running the distributed system (server + client)
 
 The enhanced system is two processes. Start the server first, then one or more clients:

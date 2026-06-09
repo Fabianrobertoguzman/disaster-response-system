@@ -22,6 +22,7 @@
         <junit.jupiter.version>5.3.1</junit.jupiter.version>
         <javafx.version>17.0.6</javafx.version>
         <mysql.connector.version>8.3.0</mysql.connector.version>
+        <h2.version>2.2.224</h2.version>
         <!-- Main class. LAUNCH the GUI with `mvn javafx:run` (the javafx-maven-plugin puts the JavaFX
              modules on the module-path). A plain `exec:java` / NetBeans "Run Project" fails with
              "JavaFX runtime components are missing" because JavaFX 11+ is a separate dependency, not part of the JDK. -->
@@ -67,6 +68,18 @@
             <artifactId>mysql-connector-j</artifactId>
             <version>${mysql.connector.version}</version>
         </dependency>
+
+        <!-- H2 in MySQL compatibility mode, TEST scope only (never packaged in the
+             jar): the substrate that lets database-backed tests run green on a
+             machine with no MySQL server, adopted by those tests incrementally.
+             The dedicated DDL is src/test/resources/db/schema-h2.sql; see
+             docs/test/H2_NOT_A_DROPIN.md for the dialect caveats. -->
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <version>${h2.version}</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
@@ -104,4 +117,30 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <!-- `mvn test -Ptest-h2` sets the drs.test.db=h2 system property, which the
+             database-backed tests adopt incrementally to select the in-memory H2
+             (MySQL-mode) substrate instead of probing for a real MySQL server (see
+             docs/test/H2_NOT_A_DROPIN.md). Tests that have not adopted it yet keep
+             their probe-and-SKIP behaviour, so the profile is always safe to run.
+             The surefire <includes> is inherited from the base <build> config. -->
+        <profile>
+            <id>test-h2</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <version>2.22.2</version>
+                        <configuration>
+                            <systemPropertyVariables>
+                                <drs.test.db>h2</drs.test.db>
+                            </systemPropertyVariables>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>
