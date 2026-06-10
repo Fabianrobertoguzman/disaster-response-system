@@ -54,6 +54,16 @@ public class Incident implements Serializable {
     /** Current lifecycle state ({@code REPORTED} -> {@code TRIAGED} -> {@code RESOLVED}). */
     private IncidentStatus status;
 
+    /**
+     * When the incident was resolved, or null while it is still open. Stamped by
+     * {@link #resolve()}; together with {@link #reportedAt} it yields the
+     * response time the analytics feature (f2) reports. Deliberately a separate
+     * mutable field rather than a reconstruction-constructor parameter, so the
+     * persistence tier sets it after rebuilding without changing the
+     * constructor signature its callers depend on.
+     */
+    private LocalDateTime resolvedAt;
+
     /** Responders currently allocated to this incident (0..{@link #MAX_RESPONDERS}). */
     private final List<Responder> responders;
 
@@ -267,6 +277,22 @@ public class Incident implements Serializable {
         this.recommendedTemplate = recommendedTemplate;
     }
 
+    /** @return when the incident was resolved, or null while it is still open. */
+    public LocalDateTime getResolvedAt() {
+        return this.resolvedAt;
+    }
+
+    /**
+     * Sets the resolution timestamp. Used by the persistence tier when
+     * rebuilding a stored incident; {@link #resolve()} stamps it for live
+     * resolutions.
+     *
+     * @param resolvedAt when the incident was resolved, or null if still open.
+     */
+    public void setResolvedAt(LocalDateTime resolvedAt) {
+        this.resolvedAt = resolvedAt;
+    }
+
     /** @return an unmodifiable view of the responders currently allocated to this incident. */
     public List<Responder> getResponders() {
         return Collections.unmodifiableList(this.responders);
@@ -318,10 +344,12 @@ public class Incident implements Serializable {
     }
 
     /**
-     * Closes this incident: moves it to {@code RESOLVED} status.
+     * Closes this incident: moves it to {@code RESOLVED} status and stamps the
+     * resolution time (the basis of the analytics response-time metric).
      */
     public void resolve() {
         this.status = IncidentStatus.RESOLVED;
+        this.resolvedAt = LocalDateTime.now();
         this.auditLog.record("Resolved");
     }
 

@@ -1,16 +1,22 @@
 package edu.cqu.drs.data;
 
+import edu.cqu.drs.model.HazardType;
 import edu.cqu.drs.model.Incident;
+import edu.cqu.drs.model.IncidentStatus;
 import edu.cqu.drs.model.Resource;
 import edu.cqu.drs.model.Responder;
+import edu.cqu.drs.model.Severity;
 import edu.cqu.drs.model.User;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Function;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -82,6 +88,11 @@ public final class InMemoryDataStore {
         return new UserView();
     }
 
+    /** @return an {@link AnalyticsDao} view over this store. */
+    public AnalyticsDao analyticsDao() {
+        return new AnalyticsView();
+    }
+
     /**
      * @param condition the precondition that must hold.
      * @param message   the message for the exception if it does not.
@@ -103,10 +114,12 @@ public final class InMemoryDataStore {
         for (Responder responder : incident.getResponders()) {
             responderCopies.add(copyOf(responder));
         }
-        return new Incident(incident.getId(), incident.getHazardType(), incident.getSeverity(),
-                incident.getGpsLocation(), incident.getDescription(), incident.getVictimCount(),
-                incident.getReportedAt(), incident.getStatus(),
+        Incident copy = new Incident(incident.getId(), incident.getHazardType(),
+                incident.getSeverity(), incident.getGpsLocation(), incident.getDescription(),
+                incident.getVictimCount(), incident.getReportedAt(), incident.getStatus(),
                 incident.getRecommendedTemplate(), responderCopies);
+        copy.setResolvedAt(incident.getResolvedAt());
+        return copy;
     }
 
     /**
@@ -431,6 +444,83 @@ public final class InMemoryDataStore {
                     copies.add(copyOf(user));
                 }
                 return copies;
+            } finally {
+                store().lock.readLock().unlock();
+            }
+        }
+    }
+
+    /**
+     * In-memory {@link AnalyticsDao} over the shared store, computing the same
+     * aggregates the JDBC implementation derives with GROUP BY/SUM - including
+     * the in-Java response-time rule - so the aggregate logic is testable with
+     * no database at all.
+     */
+    private final class AnalyticsView implements AnalyticsDao {
+
+        @Override
+        public Map<HazardType, Long> countByHazard() {
+            return count(Incident::getHazardType, HazardType.class);
+        }
+
+        @Override
+        public Map<Severity, Long> countBySeverity() {
+            return count(Incident::getSeverity, Severity.class);
+        }
+
+        @Override
+        public Map<IncidentStatus, Long> countByStatus() {
+            return count(Incident::getStatus, IncidentStatus.class);
+        }
+
+        @Override
+        public long totalVictims() {
+            store().lock.readLock().lock();
+            try {
+                long total = 0;
+                for (Incident incident : store().incidents.values()) {
+                    total += incident.getVictimCount();
+                }
+                return total;
+            } finally {
+                store().lock.readLock().unlock();
+            }
+        }
+
+        @Override
+        public List<Long> responseMinutes() {
+            store().lock.readLock().lock();
+            try {
+                List<Long> minutes = new ArrayList<>();
+                for (Incident incident : store().incidents.values()) {
+                    if (incident.getResolvedAt() != null) {
+                        minutes.add(Duration.between(
+                                incident.getReportedAt(), incident.getResolvedAt()).toMinutes());
+                    }
+                }
+                return minutes;
+            } finally {
+                store().lock.readLock().unlock();
+            }
+        }
+
+        /**
+         * Counts the stored incidents grouped by an enum-valued property.
+         *
+         * @param <K>      the enum key type.
+         * @param keyOf    extracts the grouping key from an incident.
+         * @param keyType  the enum class.
+         * @return the populated count map (absent keys mean zero incidents).
+         */
+        private <K extends Enum<K>> Map<K, Long> count(
+                Function<Incident, K> keyOf, Class<K> keyType) {
+            store().lock.readLock().lock();
+            try {
+                Map<K, Long> counts = new EnumMap<>(keyType);
+                for (Incident incident : store().incidents.values()) {
+                    counts.merge(keyOf.apply(incident), 1L, Long::sum);
+                }
+                return counts;
             } finally {
                 store().lock.readLock().unlock();
             }

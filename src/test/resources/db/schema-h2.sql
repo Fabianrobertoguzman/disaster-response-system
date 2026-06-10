@@ -35,6 +35,7 @@ CREATE TABLE incidents (
   description          TEXT,
   victim_count         INT         NOT NULL DEFAULT 0,
   reported_at          DATETIME    NOT NULL,
+  resolved_at          DATETIME    NULL,
   recommended_template VARCHAR(32) NULL,
   reported_by          BIGINT      NULL,
   CONSTRAINT fk_incident_reporter FOREIGN KEY (reported_by)

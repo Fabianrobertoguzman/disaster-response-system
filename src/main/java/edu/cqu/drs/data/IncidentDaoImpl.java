@@ -39,17 +39,17 @@ public class IncidentDaoImpl implements IncidentDao {
 
     private static final String INSERT_SQL =
             "INSERT INTO incidents (uuid, hazard_type, severity, status, latitude, longitude, "
-            + "description, victim_count, reported_at, recommended_template) "
-            + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            + "description, victim_count, reported_at, resolved_at, recommended_template) "
+            + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
     private static final String UPDATE_SQL =
             "UPDATE incidents SET hazard_type = ?, severity = ?, status = ?, latitude = ?, "
-            + "longitude = ?, description = ?, victim_count = ?, recommended_template = ? "
-            + "WHERE uuid = ?";
+            + "longitude = ?, description = ?, victim_count = ?, resolved_at = ?, "
+            + "recommended_template = ? WHERE uuid = ?";
 
     private static final String SELECT_COLUMNS =
             "SELECT id, uuid, hazard_type, severity, status, latitude, longitude, description, "
-            + "victim_count, reported_at, recommended_template FROM incidents";
+            + "victim_count, reported_at, resolved_at, recommended_template FROM incidents";
 
     private static final String SELECT_BY_UUID_SQL = SELECT_COLUMNS + " WHERE uuid = ?";
 
@@ -105,7 +105,8 @@ public class IncidentDaoImpl implements IncidentDao {
             statement.setString(7, incident.getDescription());
             statement.setInt(8, incident.getVictimCount());
             statement.setTimestamp(9, Timestamp.valueOf(incident.getReportedAt()));
-            setTemplate(statement, 10, incident.getRecommendedTemplate());
+            setNullableTimestamp(statement, 10, incident.getResolvedAt());
+            setTemplate(statement, 11, incident.getRecommendedTemplate());
             statement.executeUpdate();
         } catch (SQLException ex) {
             throw new DataAccessException(
@@ -128,8 +129,9 @@ public class IncidentDaoImpl implements IncidentDao {
             statement.setDouble(5, location.getLongitude());
             statement.setString(6, incident.getDescription());
             statement.setInt(7, incident.getVictimCount());
-            setTemplate(statement, 8, incident.getRecommendedTemplate());
-            statement.setString(9, incident.getId().toString());
+            setNullableTimestamp(statement, 8, incident.getResolvedAt());
+            setTemplate(statement, 9, incident.getRecommendedTemplate());
+            statement.setString(10, incident.getId().toString());
             statement.executeUpdate();
         } catch (SQLException ex) {
             throw new DataAccessException(
@@ -253,7 +255,8 @@ public class IncidentDaoImpl implements IncidentDao {
      */
     private static IncidentRow readRow(ResultSet rows) throws SQLException {
         String template = rows.getString("recommended_template");
-        return new IncidentRow(
+        Timestamp resolvedAt = rows.getTimestamp("resolved_at");
+        IncidentRow row = new IncidentRow(
                 rows.getLong("id"),
                 UUID.fromString(rows.getString("uuid")),
                 HazardType.valueOf(rows.getString("hazard_type")),
@@ -265,6 +268,8 @@ public class IncidentDaoImpl implements IncidentDao {
                 rows.getInt("victim_count"),
                 rows.getTimestamp("reported_at").toLocalDateTime(),
                 template == null ? null : AlertTemplate.valueOf(template));
+        row.resolvedAt = (resolvedAt == null) ? null : resolvedAt.toLocalDateTime();
+        return row;
     }
 
     /**
@@ -278,9 +283,11 @@ public class IncidentDaoImpl implements IncidentDao {
      */
     private static Incident toIncident(Connection connection, IncidentRow row) throws SQLException {
         List<Responder> responders = loadResponders(connection, row.key, row.uuid);
-        return new Incident(row.uuid, row.hazardType, row.severity,
+        Incident incident = new Incident(row.uuid, row.hazardType, row.severity,
                 new GpsCoordinate(row.latitude, row.longitude), row.description,
                 row.victimCount, row.reportedAt, row.status, row.recommendedTemplate, responders);
+        incident.setResolvedAt(row.resolvedAt);
+        return incident;
     }
 
     /**
@@ -300,6 +307,9 @@ public class IncidentDaoImpl implements IncidentDao {
         private final int victimCount;
         private final LocalDateTime reportedAt;
         private final AlertTemplate recommendedTemplate;
+
+        /** When the incident was resolved, or null while open (set after construction). */
+        private LocalDateTime resolvedAt;
 
         private IncidentRow(long key, UUID uuid, HazardType hazardType, Severity severity,
                 IncidentStatus status, double latitude, double longitude, String description,
@@ -376,6 +386,23 @@ public class IncidentDaoImpl implements IncidentDao {
             statement.setLong(1, incidentKey);
             statement.setLong(2, responderKey);
             statement.executeUpdate();
+        }
+    }
+
+    /**
+     * Binds a nullable timestamp parameter, or SQL NULL when the value is null.
+     *
+     * @param statement the statement being populated.
+     * @param index     the parameter index.
+     * @param value     the timestamp, or null.
+     * @throws SQLException if the bind fails.
+     */
+    private static void setNullableTimestamp(PreparedStatement statement, int index,
+            LocalDateTime value) throws SQLException {
+        if (value == null) {
+            statement.setNull(index, java.sql.Types.TIMESTAMP);
+        } else {
+            statement.setTimestamp(index, Timestamp.valueOf(value));
         }
     }
 

@@ -146,6 +146,22 @@ class IncidentDaoSpec {
     }
 
     @Test
+    @DisplayName("resolved_at round-trips: null while open, the stamped time once resolved")
+    void shouldRoundTripResolvedAt() {
+        Incident incident = sampleIncident(null);
+        this.dao.insert(incident);
+        assertTrue(this.dao.findByUuid(incident.getId()).orElseThrow().getResolvedAt() == null);
+
+        LocalDateTime resolvedAt = WHEN.plusMinutes(25);
+        incident.setStatus(IncidentStatus.RESOLVED);
+        incident.setResolvedAt(resolvedAt);
+        this.dao.update(incident);
+
+        assertEquals(resolvedAt,
+                this.dao.findByUuid(incident.getId()).orElseThrow().getResolvedAt());
+    }
+
+    @Test
     @DisplayName("findByUuid returns empty for an unknown id")
     void shouldReturnEmptyForUnknownId() {
         assertTrue(this.dao.findByUuid(UUID.randomUUID()).isEmpty());
