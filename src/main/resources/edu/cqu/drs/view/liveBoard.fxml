@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Priority?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<!--
+  Live Multi-Dispatcher Board (new feature f1). Controller:
+  edu.cqu.drs.view.LiveBoardController. The board POLLS the server's GET_BOARD
+  action on a selectable interval (plus a manual Refresh), showing one
+  consistent, server-timestamped snapshot per poll. Styling comes from drs.css,
+  attached at scene level.
+-->
+<VBox xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="edu.cqu.drs.view.LiveBoardController"
+      spacing="12.0" styleClass="live-board-view">
+    <padding>
+        <Insets bottom="20.0" left="24.0" right="24.0" top="20.0" />
+    </padding>
+    <children>
+        <Label styleClass="h1" text="Live Incident Board" />
+        <Label styleClass="subtitle" wrapText="true"
+               text="A shared, near-real-time view of the incident queue across every dispatcher. The board polls the server on the selected interval; each refresh is one consistent server-stamped snapshot." />
+        <Separator />
+        <HBox spacing="12.0" alignment="CENTER_LEFT">
+            <children>
+                <Label text="Poll every:" />
+                <ComboBox fx:id="intervalCombo" prefWidth="110.0" />
+                <Button fx:id="refreshNowButton" text="Refresh Now" onAction="#onRefreshNow" />
+                <Region HBox.hgrow="ALWAYS" />
+                <Label fx:id="countsLabel" styleClass="value" text="-" />
+            </children>
+        </HBox>
+        <TableView fx:id="boardTable" VBox.vgrow="ALWAYS">
+            <columns>
+                <TableColumn fx:id="refColumn" text="Ref" prefWidth="90.0" />
+                <TableColumn fx:id="hazardColumn" text="Hazard" prefWidth="110.0" />
+                <TableColumn fx:id="severityColumn" text="Severity" prefWidth="90.0" />
+                <TableColumn fx:id="victimsColumn" text="Victims" prefWidth="70.0" />
+                <TableColumn fx:id="statusColumn" text="Status" prefWidth="90.0" />
+                <TableColumn fx:id="reportedColumn" text="Reported" prefWidth="90.0" />
+                <TableColumn fx:id="respondersColumn" text="Responders" prefWidth="90.0" />
+            </columns>
+        </TableView>
+        <HBox spacing="12.0" alignment="CENTER_LEFT">
+            <children>
+                <Label fx:id="lastUpdatedLabel" styleClass="status" text="Waiting for the first snapshot..." />
+                <Region HBox.hgrow="ALWAYS" />
+                <Label fx:id="pollStatusLabel" styleClass="status" text="" />
+            </children>
+        </HBox>
+    </children>
+</VBox>

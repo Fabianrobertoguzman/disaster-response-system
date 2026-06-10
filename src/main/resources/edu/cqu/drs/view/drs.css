@@ -6,8 +6,8 @@
  * Assessment One's NFR-P05 (WCAG 2.1 AA) - full conformance is out of scope for
  * the prototype, but the visual language and the named style classes that the
  * FXML views attach to (h1, h2, subtitle, value, status, status-ok,
- * status-error, primary, placeholder, report-view, dispatch-pane, button-bar)
- * are established here.
+ * status-error, primary, placeholder, report-view, dispatch-pane,
+ * live-board-view, login-view, button-bar) are established here.
  */
 
 .root {
@@ -21,6 +21,14 @@
 }
 
 .dispatch-pane {
+    -fx-background-color: white;
+}
+
+.live-board-view {
+    -fx-background-color: white;
+}
+
+.login-view {
     -fx-background-color: white;
 }
 

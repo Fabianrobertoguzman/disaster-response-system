@@ -5,6 +5,7 @@ import edu.cqu.drs.model.TestRunReport;
 import edu.cqu.drs.model.UserRole;
 import edu.cqu.drs.presenter.SelfTestLauncher;
 import edu.cqu.drs.view.DispatchController;
+import edu.cqu.drs.view.LiveBoardController;
 import edu.cqu.drs.view.LoginController;
 import edu.cqu.drs.view.ReportController;
 
@@ -39,6 +40,8 @@ import javafx.stage.Stage;
  *   <li><b>View -&gt; Dispatcher Console</b> - DISPATCHER / ADMINISTRATOR
  *       only: triage, allocation and resolution, all performed on the
  *       server.</li>
+ *   <li><b>View -&gt; Live Board</b> - DISPATCHER / ADMINISTRATOR only:
+ *       the polling Live Multi-Dispatcher Board (new feature f1).</li>
  *   <li><b>Tools -&gt; Run Self-Tests</b> - the inherited in-GUI self-test
  *       suite (creative feature FR-CR-02).</li>
  *   <li><b>Session -&gt; Sign out</b> - ends the server session and returns
@@ -72,6 +75,10 @@ public class App extends Application {
     /** Classpath location of the dispatcher-console FXML. */
     private static final String DISPATCH_FXML =
             "/edu/cqu/drs/view/dispatch.fxml";
+
+    /** Classpath location of the live-board FXML (feature f1). */
+    private static final String LIVE_BOARD_FXML =
+            "/edu/cqu/drs/view/liveBoard.fxml";
 
     /** Classpath location of the shared stylesheet. */
     private static final String STYLESHEET = "/edu/cqu/drs/view/drs.css";
@@ -149,7 +156,10 @@ public class App extends Application {
             MenuItem dispatchItem = new MenuItem("Dispatcher Console");
             dispatchItem.setOnAction(e -> this.root.setCenter(loadView(DISPATCH_FXML,
                     (DispatchController controller) -> controller.init(this.session))));
-            viewMenu.getItems().add(dispatchItem);
+            MenuItem liveBoardItem = new MenuItem("Live Board");
+            liveBoardItem.setOnAction(e -> this.root.setCenter(loadView(LIVE_BOARD_FXML,
+                    (LiveBoardController controller) -> controller.init(this.session))));
+            viewMenu.getItems().addAll(dispatchItem, liveBoardItem);
             menuBar.getMenus().add(viewMenu);
         }
 

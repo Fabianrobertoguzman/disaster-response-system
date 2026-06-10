@@ -40,6 +40,14 @@ import java.util.UUID;
  */
 public class ServerStub implements AutoCloseable {
 
+    /**
+     * Socket read timeout in milliseconds. A server that hangs without dropping
+     * the connection would otherwise block a call forever; with the timeout the
+     * read fails into the normal error path (and, on the live board, into the
+     * pause-and-Refresh recovery) instead of wedging the client.
+     */
+    private static final int READ_TIMEOUT_MS = 15_000;
+
     private final String host;
     private final int port;
 
@@ -72,6 +80,7 @@ public class ServerStub implements AutoCloseable {
      */
     public synchronized void connect() throws IOException {
         this.socket = new Socket(this.host, this.port);
+        this.socket.setSoTimeout(READ_TIMEOUT_MS);
         this.out = new ObjectOutputStream(this.socket.getOutputStream());
         this.out.flush();
         this.in = new ObjectInputStream(this.socket.getInputStream());
