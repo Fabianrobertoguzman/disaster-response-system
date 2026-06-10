@@ -14,6 +14,12 @@ database "MySQL" as DB
 
 == Login ==
 Dispatcher -> Stub : login("dispatch1", "pw")
+note over Stub, Handler
+  ObjectOutputStream created and flushed
+  before ObjectInputStream on both peers
+  (handshake order - avoids the paired
+  stream-header deadlock).
+end note
 Stub -> Handler : Request(LOGIN, username, password)
 Handler -> Disp : handle(request)
 Disp -> Auth : login(username, password)
