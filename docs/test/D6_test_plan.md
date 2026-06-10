@@ -71,10 +71,15 @@ reconciles: 122 integration executions (the rows above) + 95 inherited +
 
 | Evidence | What it shows |
 |----------|----------------|
+| Screenshot: login view (2026-06-10 18:14) | the pre-authentication surface; the role gates everything beyond it |
+| Screenshot: citizen workflow (2026-06-10 18:12) | citizen1 files a report; the unique reference acknowledged by the server in 53 ms |
 | Screenshot: dispatcher console acceptance (2026-06-10 10:05) | login as admin; report→triage→assign→resolve cycle against MySQL |
-| Screenshot: two-client live board (2026-06-10 10:50) | client A's triaged incident visible on client B's polling board, "Last updated … (server time)" |
-| Screenshot: analytics dashboard (2026-06-10 11:48–11:53) | bar/pie charts + response times over live MySQL data |
+| Screenshot: two-dispatcher live board (2026-06-10 18:18) | dispatch2's triage propagating to dispatch1's polling board, "Last updated 18:18:10 (server time)" |
+| Screenshot: analytics dashboard (2026-06-10 18:21) | bar/pie charts, victim total and response times over live MySQL data |
+| Screenshot: test run, no database (2026-06-10 18:24) | 219 run / 0 failures / 7 honest skips, BUILD SUCCESS |
+| Screenshot: test run, `-Ptest-h2` (2026-06-10 18:25) | 244 run / 0 failures / 0 skipped, BUILD SUCCESS |
+| Screenshot: fixture + test tree (2026-06-10 18:37) | the `AnalyticsFixture` data and the `*Spec.java` tree beside the green run |
 | Surefire reports `target/surefire-reports` | the R1/R2/R3 runs transcribed above |
 
-Final D7 captures are re-taken at code freeze on the stated environment, per
+These are the code-freeze captures, taken on the stated environment per
 [CAPTURE_ENVIRONMENT.md](CAPTURE_ENVIRONMENT.md).
