@@ -30,7 +30,7 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
  *
  * @author Fabian Roberto Guzman (12287570)
  */
-@DisplayName("ResponderDao - responder persistence (MySQL)")
+@DisplayName("ResponderDao - responder persistence (MySQL/H2)")
 class ResponderDaoSpec {
 
     /** Number of responders created by the reference seed. */

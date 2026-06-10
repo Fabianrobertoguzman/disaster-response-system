@@ -16,7 +16,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /**
- * Integration tests for {@link AnalyticsDaoImpl} against a real MySQL database
+ * Integration tests for {@link AnalyticsDaoImpl} against the selected JDBC backend (MySQL, or in-memory H2 under -Ptest-h2)
  * - the SQL aggregates of feature f2 over the shared {@link AnalyticsFixture},
  * asserting the very same expected values the in-memory spec asserts (the
  * cross-backend parity contract). Skipped (not failed) when no database is
@@ -24,7 +24,7 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
  *
  * @author Fabian Roberto Guzman (12287570)
  */
-@DisplayName("AnalyticsDao - f2 SQL aggregates (MySQL)")
+@DisplayName("AnalyticsDao - f2 SQL aggregates (MySQL/H2)")
 class AnalyticsDaoSpec {
 
     private Database database;

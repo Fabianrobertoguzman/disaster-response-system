@@ -54,6 +54,9 @@ public final class Database {
     /** Resolved database password. */
     private final String password;
 
+    /** True when the endpoint was injected directly rather than resolved. */
+    private final boolean injectedEndpoint;
+
     /**
      * Builds a database helper, resolving the connection settings once.
      */
@@ -62,6 +65,28 @@ public final class Database {
         this.url = resolve("DB_URL", config, "db.url");
         this.user = resolve("DB_USER", config, "db.user");
         this.password = resolve("DB_PASSWORD", config, "db.password");
+        this.injectedEndpoint = false;
+    }
+
+    /**
+     * Builds a database helper over an explicit endpoint, bypassing the
+     * environment/file resolution. Used by the H2 test profile to point the
+     * production DAOs at an in-memory database, and available for any
+     * deployment that injects its settings directly.
+     *
+     * @param url      the JDBC URL (must not be null).
+     * @param user     the database user (must not be null; may be empty).
+     * @param password the password (must not be null; may be empty).
+     * @throws IllegalArgumentException if any argument is null.
+     */
+    public Database(String url, String user, String password) {
+        if (url == null || user == null || password == null) {
+            throw new IllegalArgumentException("url, user and password are required");
+        }
+        this.url = url;
+        this.user = user;
+        this.password = password;
+        this.injectedEndpoint = true;
     }
 
     /**
@@ -121,11 +146,15 @@ public final class Database {
         try {
             return DriverManager.getConnection(this.url, this.user, this.password);
         } catch (SQLException ex) {
-            throw new SQLException("Could not connect to MySQL at " + this.url
-                    + " as user '" + this.user + "'. Check that the MySQL server "
-                    + "is running and that the credentials in " + CONFIG_FILE
-                    + " (or the DB_URL/DB_USER/DB_PASSWORD environment variables) "
-                    + "are correct. Underlying cause: " + ex.getMessage(), ex);
+            String remediation = this.injectedEndpoint
+                    ? ""
+                    : " Check that the MySQL server is running and that the "
+                            + "credentials in " + CONFIG_FILE
+                            + " (or the DB_URL/DB_USER/DB_PASSWORD environment "
+                            + "variables) are correct.";
+            throw new SQLException("Could not connect to the database at " + this.url
+                    + " as user '" + this.user + "'." + remediation
+                    + " Underlying cause: " + ex.getMessage(), ex);
         }
     }
 

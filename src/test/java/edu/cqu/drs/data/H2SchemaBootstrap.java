@@ -37,6 +37,9 @@ public final class H2SchemaBootstrap {
     /** Classpath location of the H2-dialect DDL script (test resources). */
     private static final String SCHEMA_RESOURCE = "/db/schema-h2.sql";
 
+    /** Classpath location of the H2-dialect reference-data script (fixed uuids). */
+    private static final String SEED_RESOURCE = "/db/seed-h2.sql";
+
     /** Fully-qualified name of the H2 JDBC driver, looked up reflectively. */
     private static final String H2_DRIVER = "org.h2.Driver";
 
@@ -94,7 +97,7 @@ public final class H2SchemaBootstrap {
         Connection connection = openConnection(databaseName);
         try {
             try (Statement statement = connection.createStatement()) {
-                for (String sql : readStatements()) {
+                for (String sql : readStatements(SCHEMA_RESOURCE)) {
                     statement.execute(sql);
                 }
             }
@@ -112,19 +115,61 @@ public final class H2SchemaBootstrap {
     }
 
     /**
-     * Reads {@code schema-h2.sql} from the test classpath and splits it into
+     * Opens (or reuses) the named in-memory database, applies the H2 schema
+     * (clean slate) and the H2 reference-data seed - the full equivalent of the
+     * production {@code Database.initialise()}, in the H2 dialect.
+     *
+     * @param databaseName the in-memory database name.
+     * @return an open connection to the freshly initialised, seeded database.
+     * @throws SQLException if a statement fails.
+     * @throws IOException  if a script cannot be read.
+     */
+    public static Connection freshSeededDatabase(String databaseName)
+            throws SQLException, IOException {
+        Connection connection = freshDatabase(databaseName);
+        try {
+            try (Statement statement = connection.createStatement()) {
+                for (String sql : readStatements(SEED_RESOURCE)) {
+                    statement.execute(sql);
+                }
+            }
+        } catch (SQLException | IOException | RuntimeException ex) {
+            try {
+                connection.close();
+            } catch (SQLException closeFailure) {
+                ex.addSuppressed(closeFailure);
+            }
+            throw ex;
+        }
+        return connection;
+    }
+
+    /**
+     * Builds the JDBC URL for a named in-memory H2 database in MySQL mode, so a
+     * {@code Database} handle can point the production DAOs at it.
+     *
+     * @param databaseName the in-memory database name.
+     * @return the H2 JDBC URL.
+     */
+    public static String urlFor(String databaseName) {
+        return String.format(URL_TEMPLATE, databaseName);
+    }
+
+    /**
+     * Reads an SQL script from the test classpath and splits it into
      * {@code ;}-terminated statements, skipping blank lines and {@code --}
      * comments (same simple-split constraint as the production loader: no
      * semicolons inside string literals).
      *
-     * @return the DDL statements in order.
+     * @param resource the classpath location of the script.
+     * @return the statements in order.
      * @throws IOException if the script is missing or unreadable.
      */
-    private static List<String> readStatements() throws IOException {
+    private static List<String> readStatements(String resource) throws IOException {
         StringBuilder buffer = new StringBuilder();
-        try (InputStream in = H2SchemaBootstrap.class.getResourceAsStream(SCHEMA_RESOURCE)) {
+        try (InputStream in = H2SchemaBootstrap.class.getResourceAsStream(resource)) {
             if (in == null) {
-                throw new IOException("H2 schema not found on test classpath: " + SCHEMA_RESOURCE);
+                throw new IOException("SQL script not found on test classpath: " + resource);
             }
             try (BufferedReader reader = new BufferedReader(
                     new InputStreamReader(in, StandardCharsets.UTF_8))) {

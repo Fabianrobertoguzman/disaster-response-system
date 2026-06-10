@@ -25,7 +25,7 @@ environment precondition was absent are recorded as SKIPPED, not PASS.)
 |-----|---------|---------------|
 | Default (no DB) | `mvn test` | All unit/in-memory/socket tests PASS; MySQL-gated specs SKIP (yellow). |
 | MySQL available | `mvn test` with MySQL up | Everything above **plus** the MySQL integration specs execute for real — this is the run D6 ACTUALs for DB rows are transcribed from. |
-| H2 profile | `mvn test -Ptest-h2` | The H2-adopting database-backed tests run against in-memory H2 (MySQL mode) — the marker's database-free green path. Tests that have not yet adopted the substrate keep their MySQL probe-and-SKIP behaviour. |
+| H2 profile | `mvn test -Ptest-h2` | The database-backed tests run against in-memory H2 (MySQL mode) — the full suite green with no MySQL server: the marker's database-free path. |
 
 ## Capture procedure (performed at code freeze)
 

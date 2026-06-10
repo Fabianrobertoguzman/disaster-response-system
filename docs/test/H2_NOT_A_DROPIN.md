@@ -20,11 +20,11 @@ known divergences, so nobody mistakes an H2 pass for a full MySQL guarantee.
   `jdbc:h2:mem:<name>;MODE=MySQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1` and
   applies the H2 DDL; each initialisation drops and recreates the tables,
   mirroring the production clean-slate reset.
-- **Selection**: the profile passes `-Ddrs.test.db=h2`. The database-backed
-  specs adopt that property in a later increment (when the analytics rows land);
-  **until then they continue to probe for MySQL and SKIP when it is absent**, so
-  `-Ptest-h2` currently behaves like the default run plus the H2 substrate
-  self-test.
+- **Selection**: the profile passes `-Ddrs.test.db=h2`; `DatabaseTestSupport`
+  then reports the backend available and hands the <em>production JDBC DAOs</em>
+  a `Database` pointing at the seeded in-memory H2 instance (schema
+  `schema-h2.sql`, seed `seed-h2.sql` with fixed uuids), so every DB-gated spec
+  runs for real on H2 instead of skipping - the same DAO SQL, both backends.
 - `H2BootstrapSpec` proves the substrate itself (schema loads, eight tables,
   database-generated keys, clean-slate re-init) and runs unconditionally.
 

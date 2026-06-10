@@ -30,7 +30,7 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
  *
  * @author Fabian Roberto Guzman (12287570)
  */
-@DisplayName("AuditDao - persistent audit trail (MySQL)")
+@DisplayName("AuditDao - persistent audit trail (MySQL/H2)")
 class AuditDaoSpec {
 
     private Database database;

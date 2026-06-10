@@ -15,7 +15,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /**
- * Integration tests for {@link ResourceDaoImpl} against a real MySQL database.
+ * Integration tests for {@link ResourceDaoImpl} against the selected JDBC backend (MySQL, or in-memory H2 under -Ptest-h2).
  *
  * <p>Skipped (not failed) when no database is reachable - see
  * {@link DatabaseTestSupport}. Each test starts from a freshly initialised schema
@@ -23,7 +23,7 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
  *
  * @author Fabian Roberto Guzman (12287570)
  */
-@DisplayName("ResourceDao - resource persistence (MySQL)")
+@DisplayName("ResourceDao - resource persistence (MySQL/H2)")
 class ResourceDaoSpec {
 
     /** Number of resources created by the reference seed. */

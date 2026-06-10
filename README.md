@@ -37,8 +37,8 @@ mvn javafx:run           # launch the client (use the javafx-maven-plugin goal, 
 
 ```
 mvn test                 # full suite; MySQL-gated specs SKIP (yellow) when no database is reachable
-mvn test -Ptest-h2       # selects the in-memory H2 (MySQL-mode) substrate for the database-backed
-                         # tests that support it (adopted incrementally; see docs/test/H2_NOT_A_DROPIN.md)
+mvn test -Ptest-h2       # the database-backed tests run against in-memory H2 in MySQL mode instead
+                         # (no MySQL needed - the full suite is green; see docs/test/H2_NOT_A_DROPIN.md)
 ```
 
 - A **skipped** test is never reported as a pass — see `docs/test/SKIPPED_VS_PASSED_POLICY.md`.

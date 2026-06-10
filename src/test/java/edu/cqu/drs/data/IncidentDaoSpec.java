@@ -32,7 +32,7 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
  *
  * @author Fabian Roberto Guzman (12287570)
  */
-@DisplayName("IncidentDao - incident persistence (MySQL)")
+@DisplayName("IncidentDao - incident persistence (MySQL/H2)")
 class IncidentDaoSpec {
 
     private static final LocalDateTime WHEN = LocalDateTime.of(2026, 6, 8, 9, 15, 0);

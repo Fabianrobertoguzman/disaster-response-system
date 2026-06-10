@@ -25,12 +25,13 @@ The test plan (D6) and every reported run use a **three-valued** result column:
    not as a way to claim coverage. The availability probe is bounded
    (3-second login/connect timeout) so it skips fast instead of hanging.
 3. **The H2 path turns yellow into green where it is honest to do so.**
-   `mvn test -Ptest-h2` selects the in-memory H2 (MySQL-mode) substrate for the
-   database-backed tests that support it — adopted incrementally as those rows
-   land (see [H2_NOT_A_DROPIN.md](H2_NOT_A_DROPIN.md)); tests that have not yet
-   adopted the property keep probing MySQL and SKIP without it. A row proven on
-   H2 is reported as a PASS *on H2*; rows whose SQL diverges between dialects
-   are tagged MySQL-only and remain SKIPPED off-MySQL rather than silently red.
+   `mvn test -Ptest-h2` points the database-backed tests at in-memory H2 in
+   MySQL mode (see [H2_NOT_A_DROPIN.md](H2_NOT_A_DROPIN.md)) - the production
+   DAO SQL running on the H2 backend, so the whole suite is green with no MySQL
+   server. A row proven on H2 is reported as a PASS *on H2*; a row whose SQL
+   ever diverges between dialects would be tagged MySQL-only and remain SKIPPED
+   off-MySQL rather than silently red (none diverge today - durations are
+   computed in Java precisely to keep it that way).
 4. **ACTUAL values in D6 are transcribed only from a real executed run** on the
    environment stated in CAPTURE_ENVIRONMENT.md — never inferred from the
    expected column.
