@@ -51,9 +51,10 @@ The enhanced system is two processes. Start the server first, then one or more c
 
 1. **Start MySQL** (see *Database setup* above).
 2. **Start the server** — it applies the schema/seed and listens on a TCP port (default `5599`):
+   - Double-click `run-server.bat` (Windows) or run `./run-server.sh` (macOS/Linux); or
    - In NetBeans: right-click `DrsServerLauncher.java` → **Run File**; or
    - On the command line: `mvn exec:java -Dexec.mainClass=edu.cqu.drs.server.DrsServerLauncher` (a port may be passed as the first argument).
-3. **Start a client**: `mvn javafx:run` (or run `App` from NetBeans). The client reaches the server through `edu.cqu.drs.client.ServerStub`; launch it more than once to see concurrent multi-client dispatch.
+3. **Start a client**: double-click `run-app.bat` (or `./run-app.sh`, or `mvn javafx:run`, or run `App` from NetBeans). The client reaches the server through `edu.cqu.drs.client.ServerStub`; launch it more than once to see concurrent multi-client dispatch.
 4. **First login**: on a fresh database the server creates a default administrator — username **`admin`**, password **`admin12345`** (override with the `DRS_ADMIN_PASSWORD` environment variable; change it after first login) — plus demo accounts covering each demonstrable role, so every role can be exercised without writing SQL. Dispatch operations require the `DISPATCHER` or `ADMINISTRATOR` role; citizens may submit reports.
 
    | Username | Password | Role |
