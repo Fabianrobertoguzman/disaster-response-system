@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.chart.BarChart?>
+<?import javafx.scene.chart.CategoryAxis?>
+<?import javafx.scene.chart.NumberAxis?>
+<?import javafx.scene.chart.PieChart?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Priority?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<!--
+  Damage Assessment & Analytics Dashboard (new feature f2). Controller:
+  edu.cqu.drs.view.AnalyticsDashboardController. Every figure comes from one
+  server-assembled AnalyticsReport (GET_ANALYTICS): server-computed counts,
+  the victim total, and the response-time statistics, stamped with the server
+  clock. Styling comes from drs.css, attached at scene level.
+-->
+<VBox xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="edu.cqu.drs.view.AnalyticsDashboardController"
+      spacing="12.0" styleClass="analytics-view">
+    <padding>
+        <Insets bottom="20.0" left="24.0" right="24.0" top="20.0" />
+    </padding>
+    <children>
+        <Label styleClass="h1" text="Damage Assessment &amp; Analytics" />
+        <Label styleClass="subtitle" wrapText="true"
+               text="Aggregates computed by the server over the persisted incidents: counts by hazard and severity, the victim total, and how quickly incidents are being resolved." />
+        <Separator />
+        <HBox spacing="12.0" alignment="CENTER_LEFT">
+            <children>
+                <Button fx:id="refreshButton" text="Refresh" onAction="#onRefresh" />
+                <Label fx:id="generatedAtLabel" styleClass="status" text="Waiting for the first report..." />
+                <Region HBox.hgrow="ALWAYS" />
+                <Label fx:id="summaryLabel" styleClass="value" text="-" />
+            </children>
+        </HBox>
+        <HBox spacing="16.0" VBox.vgrow="ALWAYS">
+            <children>
+                <BarChart fx:id="hazardChart" title="Incidents by hazard"
+                          legendVisible="false" animated="false" HBox.hgrow="ALWAYS">
+                    <xAxis>
+                        <CategoryAxis label="Hazard" />
+                    </xAxis>
+                    <yAxis>
+                        <NumberAxis label="Incidents" minorTickVisible="false" />
+                    </yAxis>
+                </BarChart>
+                <PieChart fx:id="severityChart" title="Severity distribution"
+                          animated="false" HBox.hgrow="ALWAYS" />
+            </children>
+        </HBox>
+        <Separator />
+        <HBox spacing="24.0" alignment="CENTER_LEFT">
+            <children>
+                <Label text="Response times (resolved incidents):" />
+                <Label fx:id="responseTimesLabel" styleClass="value" text="-" />
+            </children>
+        </HBox>
+        <Label fx:id="statusLabel" wrapText="true" styleClass="status" />
+    </children>
+</VBox>

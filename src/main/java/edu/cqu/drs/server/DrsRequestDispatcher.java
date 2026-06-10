@@ -14,6 +14,7 @@ import edu.cqu.drs.protocol.Response;
 import edu.cqu.drs.security.AuthException;
 import edu.cqu.drs.security.AuthService;
 import edu.cqu.drs.security.Session;
+import edu.cqu.drs.server.service.AnalyticsService;
 import edu.cqu.drs.server.service.IncidentService;
 
 import java.time.LocalDateTime;
@@ -46,28 +47,47 @@ public class DrsRequestDispatcher implements RequestDispatcher {
     /** Authentication authority; null disables auth (open mode for low-level tests). */
     private final AuthService authService;
 
+    /** Analytics service (feature f2); null when analytics is not wired. */
+    private final AnalyticsService analyticsService;
+
     /**
-     * Creates an open-mode dispatcher (no authentication).
+     * Creates an open-mode dispatcher (no authentication, no analytics).
      *
      * @param incidentService the incident service (must not be null).
      */
     public DrsRequestDispatcher(IncidentService incidentService) {
-        this(incidentService, null);
+        this(incidentService, null, null);
     }
 
     /**
-     * Creates a dispatcher, optionally secured by an authentication service.
+     * Creates a dispatcher, optionally secured by an authentication service
+     * (no analytics).
      *
      * @param incidentService the incident service (must not be null).
      * @param authService     the authentication service, or null for open mode.
-     * @throws IllegalArgumentException if {@code incidentService} is null.
      */
     public DrsRequestDispatcher(IncidentService incidentService, AuthService authService) {
+        this(incidentService, authService, null);
+    }
+
+    /**
+     * Creates a fully-wired dispatcher.
+     *
+     * @param incidentService  the incident service (must not be null).
+     * @param authService      the authentication service, or null for open mode.
+     * @param analyticsService the analytics service, or null when the feature is
+     *                         not wired (a GET_ANALYTICS request then receives an
+     *                         error response, mirroring the disabled-login path).
+     * @throws IllegalArgumentException if {@code incidentService} is null.
+     */
+    public DrsRequestDispatcher(IncidentService incidentService, AuthService authService,
+            AnalyticsService analyticsService) {
         if (incidentService == null) {
             throw new IllegalArgumentException("incidentService must not be null");
         }
         this.incidentService = incidentService;
         this.authService = authService;
+        this.analyticsService = analyticsService;
     }
 
     @Override
@@ -151,6 +171,11 @@ public class DrsRequestDispatcher implements RequestDispatcher {
                 // authority, not when a drifting client clock received it.
                 return Response.ok(new BoardSnapshot(
                         this.incidentService.listIncidents(), LocalDateTime.now()));
+            case GET_ANALYTICS:
+                if (this.analyticsService == null) {
+                    return Response.error("analytics is not enabled on this server");
+                }
+                return Response.ok(this.analyticsService.buildReport());
             default:
                 return Response.error("Unsupported action: " + action);
         }

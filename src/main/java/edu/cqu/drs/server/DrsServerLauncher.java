@@ -1,5 +1,6 @@
 package edu.cqu.drs.server;
 
+import edu.cqu.drs.data.AnalyticsDaoImpl;
 import edu.cqu.drs.data.AuditDao;
 import edu.cqu.drs.data.AuditDaoImpl;
 import edu.cqu.drs.data.DataAccessException;
@@ -15,6 +16,7 @@ import edu.cqu.drs.presenter.AlertTemplateRecommender;
 import edu.cqu.drs.security.AuthService;
 import edu.cqu.drs.security.FieldCipher;
 import edu.cqu.drs.security.PasswordHasher;
+import edu.cqu.drs.server.service.AnalyticsService;
 import edu.cqu.drs.server.service.IncidentService;
 
 import java.io.IOException;
@@ -73,7 +75,10 @@ public final class DrsServerLauncher {
         FieldCipher cipher = resolveCipher();
         IncidentService incidentService = new IncidentService(
                 incidentDao, responderDao, auditDao, new AlertTemplateRecommender(), cipher);
-        RequestDispatcher dispatcher = new DrsRequestDispatcher(incidentService, authService);
+        AnalyticsService analyticsService =
+                new AnalyticsService(new AnalyticsDaoImpl(database));
+        RequestDispatcher dispatcher =
+                new DrsRequestDispatcher(incidentService, authService, analyticsService);
 
         bootstrapDefaultAdmin(authService);
 

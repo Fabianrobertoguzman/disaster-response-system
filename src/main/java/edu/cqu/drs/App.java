@@ -4,6 +4,7 @@ import edu.cqu.drs.client.ClientSession;
 import edu.cqu.drs.model.TestRunReport;
 import edu.cqu.drs.model.UserRole;
 import edu.cqu.drs.presenter.SelfTestLauncher;
+import edu.cqu.drs.view.AnalyticsDashboardController;
 import edu.cqu.drs.view.DispatchController;
 import edu.cqu.drs.view.LiveBoardController;
 import edu.cqu.drs.view.LoginController;
@@ -42,6 +43,9 @@ import javafx.stage.Stage;
  *       server.</li>
  *   <li><b>View -&gt; Live Board</b> - DISPATCHER / ADMINISTRATOR only:
  *       the polling Live Multi-Dispatcher Board (new feature f1).</li>
+ *   <li><b>View -&gt; Analytics Dashboard</b> - DISPATCHER / ADMINISTRATOR
+ *       only: the Damage Assessment &amp; Analytics Dashboard (new feature
+ *       f2).</li>
  *   <li><b>Tools -&gt; Run Self-Tests</b> - the inherited in-GUI self-test
  *       suite (creative feature FR-CR-02).</li>
  *   <li><b>Session -&gt; Sign out</b> - ends the server session and returns
@@ -79,6 +83,10 @@ public class App extends Application {
     /** Classpath location of the live-board FXML (feature f1). */
     private static final String LIVE_BOARD_FXML =
             "/edu/cqu/drs/view/liveBoard.fxml";
+
+    /** Classpath location of the analytics-dashboard FXML (feature f2). */
+    private static final String ANALYTICS_FXML =
+            "/edu/cqu/drs/view/analyticsDashboard.fxml";
 
     /** Classpath location of the shared stylesheet. */
     private static final String STYLESHEET = "/edu/cqu/drs/view/drs.css";
@@ -159,7 +167,11 @@ public class App extends Application {
             MenuItem liveBoardItem = new MenuItem("Live Board");
             liveBoardItem.setOnAction(e -> this.root.setCenter(loadView(LIVE_BOARD_FXML,
                     (LiveBoardController controller) -> controller.init(this.session))));
-            viewMenu.getItems().addAll(dispatchItem, liveBoardItem);
+            MenuItem analyticsItem = new MenuItem("Analytics Dashboard");
+            analyticsItem.setOnAction(e -> this.root.setCenter(loadView(ANALYTICS_FXML,
+                    (AnalyticsDashboardController controller) ->
+                            controller.init(this.session))));
+            viewMenu.getItems().addAll(dispatchItem, liveBoardItem, analyticsItem);
             menuBar.getMenus().add(viewMenu);
         }
 

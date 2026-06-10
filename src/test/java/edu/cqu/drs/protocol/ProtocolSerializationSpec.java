@@ -3,6 +3,7 @@ package edu.cqu.drs.protocol;
 import edu.cqu.drs.model.GpsCoordinate;
 import edu.cqu.drs.model.HazardType;
 import edu.cqu.drs.model.Incident;
+import edu.cqu.drs.model.IncidentStatus;
 import edu.cqu.drs.model.Responder;
 import edu.cqu.drs.model.Severity;
 import org.junit.jupiter.api.DisplayName;
@@ -15,6 +16,7 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -112,5 +114,28 @@ class ProtocolSerializationSpec {
         assertEquals(at, copy.getSnapshotAt());
         assertEquals(open.getId(), copy.getIncidents().get(0).getId());
         assertTrue(copy.toString().contains("open=1"));
+    }
+
+    @Test
+    @DisplayName("an AnalyticsReport round-trips its maps, totals, metric and server timestamp (feature f2)")
+    void shouldRoundTripAnalyticsReport() throws Exception {
+        LocalDateTime at = LocalDateTime.of(2026, 6, 10, 11, 0, 0);
+        AnalyticsReport original = new AnalyticsReport(
+                Map.of(HazardType.FIRE, 2L),
+                Map.of(Severity.HIGH, 2L),
+                Map.of(IncidentStatus.RESOLVED, 2L),
+                7L,
+                new ResponseTimeMetric(List.of(30L, 60L)),
+                at);
+
+        AnalyticsReport copy = (AnalyticsReport) roundTrip(original);
+        assertEquals(original.getHazardCounts(), copy.getHazardCounts());
+        assertEquals(original.getSeverityCounts(), copy.getSeverityCounts());
+        assertEquals(original.getStatusCounts(), copy.getStatusCounts());
+        assertEquals(7L, copy.getTotalVictims());
+        assertEquals(2, copy.getTotalIncidents());
+        assertEquals(2, copy.getResponseTimes().getResolvedCount());
+        assertEquals(45.0, copy.getResponseTimes().getAverageMinutes());
+        assertEquals(at, copy.getGeneratedAt());
     }
 }

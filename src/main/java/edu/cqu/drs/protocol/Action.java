@@ -43,5 +43,8 @@ public enum Action {
     LIST_RESPONDERS,
 
     /** Fetch one consistent snapshot of the live incident board (feature f1). */
-    GET_BOARD
+    GET_BOARD,
+
+    /** Fetch the analytics report - counts, victims, response times (feature f2). */
+    GET_ANALYTICS
 }

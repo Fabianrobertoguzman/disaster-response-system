@@ -30,32 +30,32 @@ import java.util.UUID;
  *
  * @author Fabian Roberto Guzman (12287570)
  */
-final class AnalyticsFixture {
+public final class AnalyticsFixture {
 
     /** Number of incidents the fixture seeds. */
-    static final int TOTAL_INCIDENTS = 6;
+    public static final int TOTAL_INCIDENTS = 6;
 
     /** Expected victim total across the fixture. */
-    static final long EXPECTED_TOTAL_VICTIMS = 24;
+    public static final long EXPECTED_TOTAL_VICTIMS = 24;
 
     /**
      * Expected per-incident response times in minutes, ASCENDING, so a spec can
      * sort the actual list and assert full multiset equality.
      */
-    static final List<Long> EXPECTED_RESPONSE_MINUTES = List.of(30L, 45L, 60L);
+    public static final List<Long> EXPECTED_RESPONSE_MINUTES = List.of(30L, 45L, 60L);
 
     /** Expected incident count per hazard (hazards with no incidents are absent). */
-    static final Map<HazardType, Long> EXPECTED_BY_HAZARD = Map.of(
+    public static final Map<HazardType, Long> EXPECTED_BY_HAZARD = Map.of(
             HazardType.FIRE, 2L, HazardType.FLOOD, 2L,
             HazardType.STORM, 1L, HazardType.HAZMAT, 1L);
 
     /** Expected incident count per severity. */
-    static final Map<Severity, Long> EXPECTED_BY_SEVERITY = Map.of(
+    public static final Map<Severity, Long> EXPECTED_BY_SEVERITY = Map.of(
             Severity.CRITICAL, 2L, Severity.HIGH, 2L,
             Severity.MEDIUM, 1L, Severity.LOW, 1L);
 
     /** Expected incident count per lifecycle status. */
-    static final Map<IncidentStatus, Long> EXPECTED_BY_STATUS = Map.of(
+    public static final Map<IncidentStatus, Long> EXPECTED_BY_STATUS = Map.of(
             IncidentStatus.TRIAGED, 2L, IncidentStatus.RESOLVED, 3L,
             IncidentStatus.REPORTED, 1L);
 
@@ -70,7 +70,7 @@ final class AnalyticsFixture {
      *
      * @param dao the incident store to seed (must not be null).
      */
-    static void seed(IncidentDao dao) {
+    public static void seed(IncidentDao dao) {
         // Open: FIRE/CRITICAL/5 TRIAGED, STORM/LOW/0 REPORTED, FLOOD/CRITICAL/4 TRIAGED.
         dao.insert(incident(HazardType.FIRE, Severity.CRITICAL, IncidentStatus.TRIAGED,
                 5, DAY.plusHours(2), null));

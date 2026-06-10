@@ -6,6 +6,7 @@ import edu.cqu.drs.model.Incident;
 import edu.cqu.drs.model.Responder;
 import edu.cqu.drs.model.Severity;
 import edu.cqu.drs.protocol.Action;
+import edu.cqu.drs.protocol.AnalyticsReport;
 import edu.cqu.drs.protocol.BoardSnapshot;
 import edu.cqu.drs.protocol.ProtocolKeys;
 import edu.cqu.drs.protocol.Request;
@@ -230,6 +231,19 @@ public class ServerStub implements AutoCloseable {
      */
     public BoardSnapshot getBoard() {
         return (BoardSnapshot) requireOk(send(new Request(Action.GET_BOARD)));
+    }
+
+    /**
+     * Fetches the analytics report (feature f2): counts by hazard/severity/
+     * status, the victim total, the response-time statistics, all stamped with
+     * the server clock.
+     *
+     * @return the analytics report.
+     * @throws ServerStubException with UNAUTHORIZED status if the session lacks
+     *         the dispatcher role.
+     */
+    public AnalyticsReport getAnalytics() {
+        return (AnalyticsReport) requireOk(send(new Request(Action.GET_ANALYTICS)));
     }
 
     /** @return the current session token, or null if not logged in. */
