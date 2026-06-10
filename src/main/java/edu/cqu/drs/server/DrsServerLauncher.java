@@ -31,7 +31,8 @@ import java.sql.SQLException;
  * It applies the schema and seed, wires the JDBC DAOs into the service and
  * authentication layers, enables AES-GCM field encryption (key from the
  * {@code DRS_FIELD_KEY} environment variable, or a freshly generated one printed
- * at start-up), bootstraps a default administrator, and starts accepting clients.
+ * at start-up), bootstraps a default administrator plus the demo accounts, and
+ * starts accepting clients.
  * Clients connect with an {@link edu.cqu.drs.client.ServerStub} and must log in
  * before issuing protected actions.</p>
  *
@@ -44,6 +45,13 @@ public final class DrsServerLauncher {
 
     /** Default administrator password (a marker should change it). */
     private static final String DEFAULT_ADMIN_PASSWORD = "admin12345";
+
+    /** Demo accounts created on a fresh database, covering each demonstrable role. */
+    private static final String[][] DEMO_ACCOUNTS = {
+        {"citizen1", "citizen12345", "CITIZEN"},
+        {"dispatch1", "dispatch12345", "DISPATCHER"},
+        {"dispatch2", "dispatch12345", "DISPATCHER"},
+    };
 
     private DrsServerLauncher() {
     }
@@ -81,6 +89,7 @@ public final class DrsServerLauncher {
                 new DrsRequestDispatcher(incidentService, authService, analyticsService);
 
         bootstrapDefaultAdmin(authService);
+        bootstrapDemoAccounts(authService);
 
         DrsServer server = new DrsServer(port, dispatcher);
         server.start();
@@ -127,6 +136,26 @@ public final class DrsServerLauncher {
                     + "' (set DRS_ADMIN_PASSWORD to override; please change it after first login).");
         } catch (DataAccessException alreadyExists) {
             System.out.println("Default administrator already present.");
+        }
+    }
+
+    /**
+     * Creates the demonstration accounts on a fresh database — one citizen and
+     * two dispatchers — so every role can be exercised (and two dispatchers can
+     * share the live board) without writing SQL. The schema is reset on each
+     * start, so these normally succeed; existing accounts are left as-is.
+     *
+     * @param authService the authentication service.
+     */
+    private static void bootstrapDemoAccounts(AuthService authService) {
+        for (String[] account : DEMO_ACCOUNTS) {
+            try {
+                authService.register(account[0], account[1], UserRole.valueOf(account[2]));
+                System.out.println("Created demo account '" + account[0] + "' ("
+                        + account[2] + ", password: " + account[1] + ").");
+            } catch (DataAccessException alreadyExists) {
+                System.out.println("Demo account '" + account[0] + "' already present.");
+            }
         }
     }
 }
