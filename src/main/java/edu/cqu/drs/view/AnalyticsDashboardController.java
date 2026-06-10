@@ -13,10 +13,12 @@ import java.util.List;
 import java.util.Map;
 import javafx.fxml.FXML;
 import javafx.scene.chart.BarChart;
+import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.PieChart;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.util.StringConverter;
 
 /**
  * FXML controller for the Damage Assessment &amp; Analytics Dashboard
@@ -78,6 +80,28 @@ public class AnalyticsDashboardController {
 
     /** The session's server gateway (the dashboard fetches through it). */
     private ServerStub serverStub;
+
+    /**
+     * Initialises the view after the FXML is loaded: incident counts are whole
+     * numbers, so the bar chart's auto-ranged count axis hides the fractional
+     * tick labels it would otherwise show for small data sets.
+     */
+    @FXML
+    private void initialize() {
+        NumberAxis countAxis = (NumberAxis) this.hazardChart.getYAxis();
+        countAxis.setTickLabelFormatter(new StringConverter<Number>() {
+            @Override
+            public String toString(Number value) {
+                double ticks = value.doubleValue();
+                return (ticks == Math.rint(ticks)) ? String.valueOf((long) ticks) : "";
+            }
+
+            @Override
+            public Number fromString(String text) {
+                return null;
+            }
+        });
+    }
 
     /**
      * Injects the live server session and loads the first report. Called by the

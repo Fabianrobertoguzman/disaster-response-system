@@ -50,8 +50,11 @@
                         <NumberAxis label="Incidents" minorTickVisible="false" />
                     </yAxis>
                 </BarChart>
+                <!-- Slice labels are off: replacing the data on refresh stacks
+                     stale labels in JavaFX, and the legend below already carries
+                     each severity with its count. -->
                 <PieChart fx:id="severityChart" title="Severity distribution"
-                          animated="false" HBox.hgrow="ALWAYS" />
+                          animated="false" labelsVisible="false" HBox.hgrow="ALWAYS" />
             </children>
         </HBox>
         <Separator />
