@@ -24,7 +24,7 @@ import java.sql.DriverManager;
  *
  * @author Fabian Roberto Guzman (12287570)
  */
-final class DatabaseTestSupport {
+public final class DatabaseTestSupport {
 
     /** System property selecting the test database backend ({@code h2} or unset). */
     private static final String BACKEND_PROPERTY = "drs.test.db";
@@ -41,7 +41,7 @@ final class DatabaseTestSupport {
     /**
      * @return true when the {@code -Ptest-h2} profile selected the H2 backend.
      */
-    static boolean h2Selected() {
+    public static boolean h2Selected() {
         return "h2".equalsIgnoreCase(System.getProperty(BACKEND_PROPERTY));
     }
 
@@ -52,7 +52,7 @@ final class DatabaseTestSupport {
      *
      * @return true if the selected backend can be used.
      */
-    static synchronized boolean available() {
+    public static synchronized boolean available() {
         if (h2Selected()) {
             return H2SchemaBootstrap.h2Available();
         }
@@ -78,7 +78,7 @@ final class DatabaseTestSupport {
      * @return an initialised {@link Database}.
      * @throws Exception if the schema or seed scripts cannot be applied.
      */
-    static Database freshDatabase() throws Exception {
+    public static Database freshDatabase() throws Exception {
         if (h2Selected()) {
             // Clean-slate + seed the shared in-memory database, then hand the
             // production DAOs a Database pointing at it.
