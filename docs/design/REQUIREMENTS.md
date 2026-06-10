@@ -6,7 +6,8 @@ This document specifies the requirements of the enhanced, distributed three-tier
 Disaster Response System. Items marked **(carried)** are inherited from the A1/A2
 requirements catalogue; **(new)** items arise from the move to a client/server/
 MySQL architecture and the two new features. Status reflects the current build:
-**Implemented**, or **Planned** (scheduled for the feature increment).
+every catalogued requirement is **Implemented** (rows previously marked
+*Planned* were delivered in the feature increments).
 
 ---
 
@@ -28,8 +29,8 @@ MySQL architecture and the two new features. Status reflects the current build:
 | FR-19 | Incidents, responders, users and audit entries are persisted in MySQL with database-generated IDs. | new | Implemented |
 | FR-20 | A dispatcher can list current incidents and the responder roster from the server. | new | Implemented |
 | FR-21 | A user can log out, ending their session. | new | Implemented |
-| FR-LB-01 | A live multi-dispatcher board shows the current incident queue, refreshed periodically. | new (f1) | Planned |
-| FR-AN-01 | An analytics dashboard reports incident counts, severity distribution and response metrics. | new (f2) | Planned |
+| FR-LB-01 | A live multi-dispatcher board shows the current incident queue, refreshed periodically. | new (f1) | Implemented |
+| FR-AN-01 | An analytics dashboard reports incident counts, severity distribution and response metrics. | new (f2) | Implemented |
 
 > **Security is not a feature.** The §2.5 security measures (R2) satisfy a
 > mandatory requirement; they are not counted among the two new features
@@ -77,9 +78,10 @@ MySQL architecture and the two new features. Status reflects the current build:
 
 | Feature | Requirement summary | Tier distinction | Status |
 |---------|---------------------|------------------|--------|
-| **f1 — Live Multi-Dispatcher Board** | Multiple dispatchers see a shared, near-real-time incident board. Baseline: client-side polling of `LIST_INCIDENTS` on an interval; server-push is optional gold-plating layered only once the polling baseline is solid. | Exercises the full client↔server↔DB path under concurrent dispatchers; depends on the multi-threaded server and thread-safe queue already built. | Planned |
-| **f2 — Damage Assessment & Analytics Dashboard** | Aggregate views over incidents: counts by hazard, severity distribution, and response-time metrics, computed by SQL aggregates. | Adds an analytics DAO of parameterised aggregate queries over the MySQL incident store. | Planned |
+| **f1 — Live Multi-Dispatcher Board** | Multiple dispatchers see a shared, near-real-time incident board: a JavaFX board view polls the dedicated `GET_BOARD` action on a selectable interval (default 3 s) and renders one consistent, **server-stamped** snapshot per poll (rows + open/total counts + "last updated" server time). Server-push remains optional gold-plating beyond this committed polling baseline. | Exercises the full client↔server↔DB path under concurrent dispatchers (pinned by a repeated multi-client concurrency spec); built on the multi-threaded server and thread-safe data tier. | Implemented |
+| **f2 — Damage Assessment & Analytics Dashboard** | Aggregate views over the persisted incidents: counts by hazard (bar chart), severity distribution (pie chart), victim total, and response-time statistics (min/average/max minutes over resolved incidents), assembled server-side into one `AnalyticsReport`. | Adds `AnalyticsDao` (SQL `GROUP BY`/`SUM` aggregates; response durations derived in Java for cross-backend parity) over the incident store, an `AnalyticsService`, and the dashboard view. | Implemented |
 
 Both features are **new domain capabilities** (not the inherited cf1/cf3, and not
-the §2.5 security work). Each will be delivered end-to-end across all three tiers,
-and each new model class will carry a hand-written `toString()`.
+the §2.5 security work). Each is delivered end-to-end across all three tiers, and
+each new wire artefact (`BoardSnapshot`, `AnalyticsReport`, `ResponseTimeMetric`)
+carries an explicit `serialVersionUID` and a hand-written `toString()`.

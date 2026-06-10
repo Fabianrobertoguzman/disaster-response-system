@@ -1,10 +1,10 @@
 @echo off
 REM ============================================================
-REM DRS-Initial - JUnit Test Suite Runner (Windows)
+REM DRS-Enhanced - JUnit Test Suite Runner (Windows)
 REM
-REM Double-click this file to run all 95 unit tests.
+REM Double-click this file to run the JUnit suite.
 REM Expected outcome:
-REM   Tests run: 95, Failures: 0, Errors: 0, Skipped: 0
+REM   all tests green (database-gated tests skip when no MySQL is reachable)
 REM   BUILD SUCCESS
 REM
 REM Requires ONE of:
@@ -13,7 +13,7 @@ REM   * Apache NetBeans installed at the default location
 REM     (C:\Program Files\Apache NetBeans), which bundles both.
 REM
 REM Author: Fabian Roberto Guzman (12287570)
-REM Unit:   COIT20258 Software Engineering - Assessment 2
+REM Unit:   COIT20258 Software Engineering - Assessment 3
 REM ============================================================
 
 setlocal
@@ -21,8 +21,8 @@ setlocal
 cd /d "%~dp0"
 
 echo ============================================================
-echo  DRS-Initial - JUnit Test Suite
-echo  Fabian Roberto Guzman (12287570) - COIT20258 Assessment 2
+echo  DRS-Enhanced - JUnit Test Suite
+echo  Fabian Roberto Guzman (12287570) - COIT20258 Assessment 3
 echo ============================================================
 echo.
 
@@ -56,7 +56,8 @@ exit /b 1
 
 :run
 echo [INFO] Running the JUnit test suite...
-echo [INFO] 14 *Spec.java classes, 83 @Test + 2 @ParameterizedTest = 95 executions
+echo [INFO] 40 *Spec.java classes; 244 executions with a database (or -Ptest-h2),
+echo [INFO] 219 run / 7 skipped without one (DB-gated classes skip, never fail)
 echo.
 call mvn clean test
 

@@ -21,8 +21,8 @@ rectangle "DRS-Enhanced" {
   usecase "Allocate responder" as UC_assign
   usecase "Resolve incident" as UC_resolve
   usecase "Recommend alert template" as UC_template
-  usecase "View live board\n(planned)" as UC_board
-  usecase "View analytics\n(planned)" as UC_analytics
+  usecase "View live board (f1)" as UC_board
+  usecase "View analytics (f2)" as UC_analytics
 }
 
 Citizen --> UC_login
@@ -44,6 +44,8 @@ UC_list ..> UC_login : <<include>>
 UC_triage ..> UC_login : <<include>>
 UC_assign ..> UC_login : <<include>>
 UC_resolve ..> UC_login : <<include>>
+UC_board ..> UC_login : <<include>>
+UC_analytics ..> UC_login : <<include>>
 UC_logout ..> UC_login : <<include>>
 UC_template ..> UC_triage : <<extend>>
 

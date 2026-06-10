@@ -1,20 +1,20 @@
 #!/usr/bin/env bash
 # ============================================================
-# DRS-Initial - JavaFX Prototype Launcher (macOS / Linux)
+# DRS-Enhanced - JavaFX Client Launcher (macOS / Linux)
 #
 # Run from a terminal:  ./run-app.sh
 # Requires: JDK 17+ and Maven 3.6+ on PATH.
 #
 # Author: Fabian Roberto Guzman (12287570)
-# Unit:   COIT20258 Software Engineering - Assessment 2
+# Unit:   COIT20258 Software Engineering - Assessment 3
 # ============================================================
 set -euo pipefail
 
 cd "$(dirname "$0")"
 
 echo "============================================================"
-echo " DRS-Initial - Disaster Response System"
-echo " Fabian Roberto Guzman (12287570) - COIT20258 Assessment 2"
+echo " DRS-Enhanced - Disaster Response System"
+echo " Fabian Roberto Guzman (12287570) - COIT20258 Assessment 3"
 echo "============================================================"
 echo
 

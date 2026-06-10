@@ -21,6 +21,19 @@ package protocol {
     +ok(payload) : Response
     +unauthorized(msg) : Response
   }
+  class BoardSnapshot {
+    -snapshotAt : LocalDateTime
+    +getOpenCount() : int
+    +getTotalCount() : int
+  }
+  class AnalyticsReport {
+    -generatedAt : LocalDateTime
+    +getHazardCounts() : Map
+    +getTotalVictims() : long
+  }
+  class ResponseTimeMetric {
+    +getAverageMinutes() : double
+  }
 }
 
 package model {
@@ -47,6 +60,7 @@ package data {
   interface ResponderDao
   interface AuditDao
   interface UserDao
+  interface AnalyticsDao
   class Database {
     +getConnection() : Connection
     +initialise()
@@ -77,6 +91,9 @@ package "server / service" as serverpkg {
     +triage(...)
     +assignResponder(...)
   }
+  class AnalyticsService {
+    +buildReport() : AnalyticsReport
+  }
 }
 
 package security {
@@ -95,8 +112,16 @@ package client {
     +login(...) : Session
     +submitIncident(...) : Incident
     +listIncidents() : List
+    +getBoard() : BoardSnapshot
+    +getAnalytics() : AnalyticsReport
+  }
+  class ClientSession {
+    +runAsync(call, onOk, onErr)
+    +signOut(onComplete)
   }
   class LoginPresenter
+  class ReportClientPresenter
+  class DispatchClientPresenter
 }
 
 ' relationships
@@ -128,10 +153,18 @@ AuthService --> PasswordHasher
 AuthService --> AuditDao
 AuthService ..> Session
 
+DrsRequestDispatcher --> AnalyticsService
+AnalyticsService --> AnalyticsDao
+AnalyticsService ..> AnalyticsReport
+AnalyticsReport --> ResponseTimeMetric
+
 ServerStub ..> Request
 ServerStub ..> Response
 ServerStub ..> Session
+ClientSession --> ServerStub
 LoginPresenter --> ServerStub
+ReportClientPresenter --> ServerStub
+DispatchClientPresenter --> ServerStub
 
 Incident --> Severity
 Incident --> IncidentStatus

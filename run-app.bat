@@ -1,6 +1,6 @@
 @echo off
 REM ============================================================
-REM DRS-Initial - JavaFX Prototype Launcher (Windows)
+REM DRS-Enhanced - JavaFX Client Launcher (Windows)
 REM
 REM Double-click this file to start the application.
 REM No NetBeans, no PowerShell, no typing commands required.
@@ -11,7 +11,7 @@ REM   * Apache NetBeans installed at the default location
 REM     (C:\Program Files\Apache NetBeans), which bundles both.
 REM
 REM Author: Fabian Roberto Guzman (12287570)
-REM Unit:   COIT20258 Software Engineering - Assessment 2
+REM Unit:   COIT20258 Software Engineering - Assessment 3
 REM ============================================================
 
 setlocal
@@ -20,8 +20,8 @@ REM Move to the project folder (where this .bat lives)
 cd /d "%~dp0"
 
 echo ============================================================
-echo  DRS-Initial - Disaster Response System
-echo  Fabian Roberto Guzman (12287570) - COIT20258 Assessment 2
+echo  DRS-Enhanced - Disaster Response System
+echo  Fabian Roberto Guzman (12287570) - COIT20258 Assessment 3
 echo ============================================================
 echo.
 

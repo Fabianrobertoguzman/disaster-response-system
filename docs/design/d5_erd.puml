@@ -31,6 +31,7 @@ entity incidents {
   description : TEXT  '' AES-GCM encrypted at rest
   * victim_count : INT
   * reported_at : DATETIME
+  resolved_at : DATETIME  '' stamped on resolve (f2 response times)
   recommended_template : VARCHAR(32)
   reported_by : BIGINT <<FK users.id>>
 }

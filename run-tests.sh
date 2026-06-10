@@ -1,20 +1,22 @@
 #!/usr/bin/env bash
 # ============================================================
-# DRS-Initial - JUnit Test Suite Runner (macOS / Linux)
+# DRS-Enhanced - JUnit Test Suite Runner (macOS / Linux)
 #
 # Run from a terminal:  ./run-tests.sh
-# Expected outcome: Tests run: 95, Failures: 0, Errors: 0
+# Expected outcome: all tests green - 244 run / 0 failures with a database
+# (MySQL, or H2 via -Ptest-h2); 219 run / 7 skipped with no database, where
+# the 7 skips are the DB-gated spec classes (skips, never failures)
 #
 # Author: Fabian Roberto Guzman (12287570)
-# Unit:   COIT20258 Software Engineering - Assessment 2
+# Unit:   COIT20258 Software Engineering - Assessment 3
 # ============================================================
 set -euo pipefail
 
 cd "$(dirname "$0")"
 
 echo "============================================================"
-echo " DRS-Initial - JUnit Test Suite"
-echo " Fabian Roberto Guzman (12287570) - COIT20258 Assessment 2"
+echo " DRS-Enhanced - JUnit Test Suite"
+echo " Fabian Roberto Guzman (12287570) - COIT20258 Assessment 3"
 echo "============================================================"
 echo
 
@@ -25,7 +27,8 @@ if ! command -v mvn >/dev/null 2>&1; then
 fi
 
 echo "[INFO] Running the JUnit test suite..."
-echo "[INFO] 14 *Spec.java classes, 83 @Test + 2 @ParameterizedTest = 95 executions"
+echo "[INFO] 40 *Spec.java classes; 244 executions with a database (or -Ptest-h2),"
+echo "[INFO] 219 run / 7 skipped without one (DB-gated classes skip, never fail)"
 echo
 mvn clean test
 

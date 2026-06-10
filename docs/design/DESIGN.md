@@ -12,14 +12,13 @@ or with the PlantUML CLI:
 java -jar plantuml.jar docs/design/*.puml      # produces a PNG per diagram
 ```
 
-They describe the system **as built** in this repository (data tier, distributed
-core, and §2.5 security); the two new features (f1 live board, f2 analytics) are
-shown as *planned* where they appear.
+They describe the system **as built** in this repository — data tier, distributed
+core, §2.5 security, and the two new features (f1 live board, f2 analytics).
 
 | Row | Artefact | What it shows |
 |-----|----------|---------------|
 | **D1** | [d1_architecture.puml](d1_architecture.puml) | The three tiers and the shared protocol: JavaFX MVP client ↔ TCP/serialised messages ↔ multi-threaded server (dispatcher, services, security) ↔ JDBC/DAO ↔ MySQL. Annotates the concurrency posture and the V-C4 hashing-vs-encryption distinction. |
-| **D2** | [d2_use_case.puml](d2_use_case.puml) | Actors (Citizen, Dispatcher, Administrator) and use cases, with `<<include>>` of *Log in* on every protected case and the planned board/analytics cases. |
+| **D2** | [d2_use_case.puml](d2_use_case.puml) | Actors (Citizen, Dispatcher, Administrator) and use cases, with `<<include>>` of *Log in* on every protected case, including the two new-feature cases (Live Board f1, Analytics f2). |
 | **D3** | [d3_class_diagram.puml](d3_class_diagram.puml) | The key classes by tier (protocol, model, data, server/service, security, client) and their dependencies — matching the actual packages. |
 | **D4** | [d4_sequence_submit.puml](d4_sequence_submit.puml), [d4_sequence_login.puml](d4_sequence_login.puml) | The distributed *submit incident* flow (including encrypt-at-rest) and the *login + role-gated action* flow (including the anti-enumeration equal-cost hash). |
 | **D5** | [d5_erd.puml](d5_erd.puml) | The MySQL schema: eight tables, surrogate `BIGINT AUTO_INCREMENT` keys plus a `uuid` domain id (§2.4), the composite-key junction, and the append-only audit log. |
@@ -59,9 +58,11 @@ shown as *planned* where they appear.
   in the audit trail; wiring the reporter FK is a small follow-up.
 - **`notifications` and `partner_agencies`** are created and (for agencies) seeded
   in the schema — carried forward from the A1/A2 partner-notification concept —
-  but are not yet wired to a DAO at runtime in this build.
-- **The two new features (f1, f2)** are specified (R5) and shown in D2 but are not
-  implemented in this increment.
+  but are not wired to a DAO at runtime; partner notification in the client is a
+  clearly-labelled **local stub** (no partner wire action exists).
+- **f1 server-push** is deliberately not built: the committed Live Board baseline
+  is client-side polling (a server-stamped snapshot per poll); push would be
+  gold-plating on a separate notification thread.
 
 ## Reuse disposition
 
@@ -70,4 +71,4 @@ shown as *planned* where they appear.
   recommender, the pom and test conventions.
 - **New (0% reuse):** the distributed architecture (D1), the protocol module, the
   multi-threaded server, the MySQL data tier and ERD (D5), and the §2.5 security
-  tier; plus the two planned features.
+  tier; plus the two new features (f1, f2).
