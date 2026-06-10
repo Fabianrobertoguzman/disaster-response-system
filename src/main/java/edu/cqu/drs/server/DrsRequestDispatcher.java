@@ -7,6 +7,7 @@ import edu.cqu.drs.model.Severity;
 import edu.cqu.drs.model.User;
 import edu.cqu.drs.model.UserRole;
 import edu.cqu.drs.protocol.Action;
+import edu.cqu.drs.protocol.BoardSnapshot;
 import edu.cqu.drs.protocol.ProtocolKeys;
 import edu.cqu.drs.protocol.Request;
 import edu.cqu.drs.protocol.Response;
@@ -15,6 +16,7 @@ import edu.cqu.drs.security.AuthService;
 import edu.cqu.drs.security.Session;
 import edu.cqu.drs.server.service.IncidentService;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.NoSuchElementException;
 import java.util.UUID;
@@ -143,6 +145,12 @@ public class DrsRequestDispatcher implements RequestDispatcher {
                         request.getUuid(ProtocolKeys.INCIDENT_ID), actorId));
             case LIST_RESPONDERS:
                 return Response.ok(new ArrayList<>(this.incidentService.listResponders()));
+            case GET_BOARD:
+                // The snapshot time is the SERVER clock: a polling board's
+                // "last updated" must state when the data was true on the
+                // authority, not when a drifting client clock received it.
+                return Response.ok(new BoardSnapshot(
+                        this.incidentService.listIncidents(), LocalDateTime.now()));
             default:
                 return Response.error("Unsupported action: " + action);
         }

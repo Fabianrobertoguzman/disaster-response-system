@@ -6,6 +6,7 @@ import edu.cqu.drs.model.Incident;
 import edu.cqu.drs.model.Responder;
 import edu.cqu.drs.model.Severity;
 import edu.cqu.drs.protocol.Action;
+import edu.cqu.drs.protocol.BoardSnapshot;
 import edu.cqu.drs.protocol.ProtocolKeys;
 import edu.cqu.drs.protocol.Request;
 import edu.cqu.drs.protocol.Response;
@@ -207,6 +208,19 @@ public class ServerStub implements AutoCloseable {
     @SuppressWarnings("unchecked")
     public List<Responder> listResponders() {
         return (List<Responder>) requireOk(send(new Request(Action.LIST_RESPONDERS)));
+    }
+
+    /**
+     * Fetches one consistent snapshot of the live incident board (feature f1):
+     * the priority-ordered incidents plus the server-stamped snapshot time and
+     * open/total counts.
+     *
+     * @return the board snapshot.
+     * @throws ServerStubException with UNAUTHORIZED status if the session lacks
+     *         the dispatcher role.
+     */
+    public BoardSnapshot getBoard() {
+        return (BoardSnapshot) requireOk(send(new Request(Action.GET_BOARD)));
     }
 
     /** @return the current session token, or null if not logged in. */

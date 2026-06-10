@@ -13,6 +13,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -91,5 +93,24 @@ class ProtocolSerializationSpec {
         assertEquals(Status.UNAUTHORIZED, copy.getStatus());
         assertEquals("no token", copy.getMessage());
         assertNull(copy.getPayload());
+    }
+
+    @Test
+    @DisplayName("a BoardSnapshot round-trips its rows, counts and server timestamp (feature f1)")
+    void shouldRoundTripBoardSnapshot() throws Exception {
+        Incident open = new Incident(HazardType.FIRE,
+                new GpsCoordinate(-23.3781, 150.5136), "Open one", 1);
+        Incident closed = new Incident(HazardType.STORM,
+                new GpsCoordinate(-23.0, 150.0), "Closed one", 0);
+        closed.resolve();
+        LocalDateTime at = LocalDateTime.of(2026, 6, 10, 10, 4, 9);
+
+        BoardSnapshot copy = (BoardSnapshot) roundTrip(
+                new BoardSnapshot(List.of(open, closed), at));
+        assertEquals(2, copy.getTotalCount());
+        assertEquals(1, copy.getOpenCount());
+        assertEquals(at, copy.getSnapshotAt());
+        assertEquals(open.getId(), copy.getIncidents().get(0).getId());
+        assertTrue(copy.toString().contains("open=1"));
     }
 }

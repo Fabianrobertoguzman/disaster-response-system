@@ -40,5 +40,8 @@ public enum Action {
     RECOMMEND_TEMPLATE,
 
     /** List the field responders. */
-    LIST_RESPONDERS
+    LIST_RESPONDERS,
+
+    /** Fetch one consistent snapshot of the live incident board (feature f1). */
+    GET_BOARD
 }
