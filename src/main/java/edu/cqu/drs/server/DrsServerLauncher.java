@@ -47,13 +47,17 @@ public final class DrsServerLauncher {
     }
 
     /**
-     * Boots the secured server.
+     * Boots the secured server and keeps it running until the process is
+     * terminated (Ctrl+C / IDE stop), at which point the shutdown hook closes
+     * the listening socket and the worker pool.
      *
      * @param args optional single argument: the listening port.
      * @throws IOException  if the database scripts cannot be read or the socket cannot bind.
      * @throws SQLException if the schema/seed cannot be applied.
+     * @throws InterruptedException if the launcher thread is interrupted.
      */
-    public static void main(String[] args) throws IOException, SQLException {
+    public static void main(String[] args)
+            throws IOException, SQLException, InterruptedException {
         int port = (args.length > 0) ? Integer.parseInt(args[0]) : DrsServer.DEFAULT_PORT;
 
         Database database = new Database();
@@ -77,6 +81,10 @@ public final class DrsServerLauncher {
         server.start();
         System.out.println("DRS-Enhanced server listening on port " + server.getPort());
         Runtime.getRuntime().addShutdownHook(new Thread(server::stop, "drs-shutdown"));
+
+        // The accept-loop runs on a daemon thread, so the launcher must hold the
+        // JVM open itself: park the main thread until the process is terminated.
+        Thread.currentThread().join();
     }
 
     /**
