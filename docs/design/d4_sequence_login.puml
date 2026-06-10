@@ -10,6 +10,7 @@ participant "AuthService" as Auth
 participant "UserDao" as UserDao
 participant "PasswordHasher" as Hasher
 participant "AuditDao" as Audit
+database "MySQL" as DB
 
 == Login ==
 Dispatcher -> Stub : login("dispatch1", "pw")
@@ -17,10 +18,13 @@ Stub -> Handler : Request(LOGIN, username, password)
 Handler -> Disp : handle(request)
 Disp -> Auth : login(username, password)
 Auth -> UserDao : findByUsername(username)
+UserDao -> DB : SELECT ... FROM users WHERE username = ?
+DB --> UserDao : row (password_hash, salt, role)
 UserDao --> Auth : StoredUser(hash, salt)
 Auth -> Hasher : matches(password, salt, hash)
 Hasher --> Auth : true
-Auth -> Audit : record(LOGIN, actor, time)
+Auth -> Audit : record(LOGIN, actor)
+Audit -> DB : INSERT INTO audit_log (server-stamped ts)
 Auth --> Disp : session token
 Disp --> Handler : Response.ok(Session{token, user})
 Handler --> Stub : Response
@@ -30,7 +34,7 @@ Stub -> Stub : store token
 Dispatcher -> Stub : triage(incidentId, CRITICAL)
 Stub -> Handler : Request(TRIAGE_INCIDENT, token, params)
 Handler -> Disp : handle(request)
-Disp -> Auth : requireRole(token, DISPATCHER/ADMIN)
+Disp -> Auth : requireRole(token, DISPATCHER/ADMINISTRATOR)
 alt token valid and role permitted
   Auth --> Disp : User
   Disp --> Handler : Response.ok(incident)

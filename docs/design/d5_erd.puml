@@ -5,8 +5,10 @@ title DRS-Enhanced - D5 Entity-Relationship Diagram (MySQL schema)
 skinparam linetype ortho
 hide circle
 
-' Every table has a database-generated BIGINT AUTO_INCREMENT surrogate key (PK)
-' plus a CHAR(36) uuid that carries the domain identity (Assessment 3 section 2.4).
+' Every entity table has a database-generated BIGINT AUTO_INCREMENT surrogate key
+' (PK); the incident_responders junction instead uses a composite key of two such
+' generated IDs. The four domain-entity tables also carry a CHAR(36) uuid with the
+' domain identity (Assessment 3 section 2.4).
 
 entity users {
   * id : BIGINT <<PK, auto>>
