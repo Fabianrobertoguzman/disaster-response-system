@@ -17,7 +17,7 @@ core, §2.5 security, and the two new features (f1 live board, f2 analytics).
 
 | Row | Artefact | What it shows |
 |-----|----------|---------------|
-| **D1** | [d1_architecture.puml](d1_architecture.puml) | The three tiers and the shared protocol: JavaFX MVP client ↔ TCP/serialised messages ↔ multi-threaded server (dispatcher, services, security) ↔ JDBC/DAO ↔ MySQL. Annotates the concurrency posture and the V-C4 hashing-vs-encryption distinction. |
+| **D1** | [d1_architecture.puml](d1_architecture.puml) | The three tiers and the shared protocol: JavaFX MVP client ↔ TCP/serialised messages ↔ multi-threaded server (dispatcher, services, security) ↔ JDBC/DAO ↔ MySQL. Annotates the concurrency posture and the hashing-vs-encryption distinction. |
 | **D2** | [d2_use_case.puml](d2_use_case.puml) | Actors (Citizen, Dispatcher, Administrator) and use cases, with `<<include>>` of *Log in* on every protected case, including the two new-feature cases (Live Board f1, Analytics f2). |
 | **D3** | [d3_class_diagram.puml](d3_class_diagram.puml) | The key classes by tier (protocol, model, data, server/service, security, client) and their dependencies — matching the actual packages. |
 | **D4** | [d4_sequence_submit.puml](d4_sequence_submit.puml), [d4_sequence_login.puml](d4_sequence_login.puml) | The distributed *submit incident* flow (including encrypt-at-rest) and the *login + role-gated action* flow (including the anti-enumeration equal-cost hash). |
@@ -33,7 +33,7 @@ core, §2.5 security, and the two new features (f1 live board, f2 analytics).
   on the client; the A2 presenters' business logic moved to server-side services
   (`IncidentService`). The server is a *Service/Application* layer, never "the
   Presenter".
-- **Concurrency (V-C1).** `DrsServer` accepts connections and runs one pooled
+- **Concurrency.** `DrsServer` accepts connections and runs one pooled
   `ClientHandler` per client. Shared state is reached only through the thread-safe
   data tier: the JDBC DAOs open a fresh connection per request (a JDBC
   `Connection` is not thread-safe), and the in-memory test backend guards its
@@ -47,7 +47,7 @@ core, §2.5 security, and the two new features (f1 live board, f2 analytics).
   no-duplicate-allocation constraint. The four domain-entity tables (users,
   incidents, responders, resources) additionally carry a `CHAR(36) uuid` column
   with the domain identity; the DAOs map between them.
-- **Security (§2.5), with the V-C4 distinction.** *Access rights*: PBKDF2 password
+- **Security (§2.5), with the hashing-vs-encryption distinction.** *Access rights*: PBKDF2 password
   **hashing** (one-way) + role-gated actions. *Encryption/decryption*: genuine
   **reversible** AES-256-GCM (`FieldCipher`) on the incident description at rest —
   hashing is explicitly **not** counted as this measure. *Time stamping*:

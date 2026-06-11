@@ -15,7 +15,7 @@ import java.util.List;
 /**
  * Creates and initialises an in-memory H2 database in MySQL compatibility mode
  * for the database-backed tests, so they can run green on a machine with no
- * MySQL server (the {@code -Ptest-h2} profile / V-H2 marker re-run path).
+ * MySQL server (the {@code -Ptest-h2} profile - the marker's database-free re-run path).
  *
  * <p>The schema applied is the dedicated {@code /db/schema-h2.sql} on the test
  * classpath - a hand-maintained copy of the production DDL written to the

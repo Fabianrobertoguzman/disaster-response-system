@@ -70,3 +70,5 @@ The client/server protocol lives in the shared `edu.cqu.drs.protocol` package; t
 ## What carries over from Assessments 1 and 2
 
 Domain model (Incident, IncidentQueue, Responder, Resource, User/UserRole, AuditLog, GpsCoordinate, AlertTemplate, the enums, IPartnerAgency + 8 stubs), the MVP structure, the 95-test JUnit suite, the A1 use-case/sequence/class diagrams, and the A1 requirements register.
+
+The inherited A2 baseline class diagrams are filed under `docs/legacy-a2/` for reference; they describe the superseded single-process prototype. The current DRS-Enhanced design set (D1–D5) lives in `docs/design/`.

@@ -61,7 +61,7 @@ note right of drsserver
 end note
 
 note bottom of security
-  V-C4: PBKDF2 = one-way hashing
+  PBKDF2 = one-way hashing
   (access rights). AES-256-GCM =
   the genuine reversible §2.5
   encryption measure.

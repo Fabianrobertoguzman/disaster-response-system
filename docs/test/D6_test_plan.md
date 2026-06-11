@@ -34,10 +34,10 @@ Layer key: **DB** = JDBC DAO ↔ database · **SRV** = socket server/services ·
 | T-DB-04 | DB | `AuditDaoSpec` · append-only trail (5 tests) | clean seeded schema | entries with/without actor/incident | server-stamped `ts`; incident filter; unknown refs rejected | as expected on both backends | PASS |
 | T-DB-05 | DB | `AnalyticsDaoSpec` · f2 SQL aggregates (4 tests) | `AnalyticsFixture` (6 incidents) | GROUP BY/SUM queries + response pairs | counts FIRE2/FLOOD2/STORM1/HAZMAT1, severities 2/2/1/1, statuses 2/3/1, victims 24, minutes {30,45,60}; empty table → empty/zero | exact match on both backends | PASS |
 | T-DB-06 | DB | `UserDaoSpec` · credential persistence (4 tests) | clean schema | user + PBKDF2 hash/salt | hash and salt round-trip AND verify against the original password; plain reads credential-free; duplicate username rejected, original row intact | as expected on both backends | PASS |
-| T-SRV-01 | SRV | `ProtocolSerializationSpec` · wire round-trips (5 tests) | none (in-memory streams) | Request/Response/Incident graph/BoardSnapshot/AnalyticsReport | byte-exact object round-trip incl. enum maps and timestamps | as expected (every run) | PASS |
+| T-SRV-01 | SRV | `ProtocolSerializationSpec` · wire round-trips (5 tests) | none (in-memory streams) | Request/Response/Incident graph/BoardSnapshot/AnalyticsReport | object round-trip over real serialised bytes (fields, enum maps and timestamps intact) | as expected (every run) | PASS |
 | T-SRV-02 | SRV | `IncidentServiceSpec` · business tier (9 tests) | in-memory store | submit/triage/assign/resolve/recommend | state transitions + audit-on-write + most-urgent-first | as expected (every run) | PASS |
 | T-SRV-03 | SRV | `AnalyticsServiceSpec` · report assembly (5 tests) | shared fixture | `buildReport()` | fixture constants; min 30 / avg 45.0 / max 60; zero metric on empty | as expected (every run) | PASS |
-| T-SRV-04 | SRV | `StreamHandshakeSpec` · V-M2 deadlock pin (1 test) | running server, silent raw socket | nothing (that is the test) | the server's `0xACED/5` stream header arrives unprompted within 5 s | header received | PASS |
+| T-SRV-04 | SRV | `StreamHandshakeSpec` · stream-deadlock pin (1 test) | running server, silent raw socket | nothing (that is the test) | the server's `0xACED/5` stream header arrives unprompted within 5 s | header received | PASS |
 | T-CS-01 | CS | `ServerStubIntegrationSpec` · open-mode e2e (9 tests) | in-memory server, ephemeral port | the full dispatch action set over the socket | each action lands server-side and returns the updated state | as expected (every run) | PASS |
 | T-CS-02 | CS | `ClientSessionSpec` · threading contract (9 tests) | none | runAsync/signOut calls | off-caller-thread execution, exactly-one callback, ordering, graceful closed-session failure | as expected (every run) | PASS |
 | T-CS-03 | CS | `ReportClientPresenterSpec` + `DispatchClientPresenterSpec` (15 tests) | in-memory server | the client presenters' surfaces | submissions/triage/assign/resolve land on the SERVER; BAD_REQUEST/NOT_FOUND surfaced; deterministic server-down refusal | as expected (every run) | PASS |
@@ -79,7 +79,7 @@ reconciles: 122 integration executions (the rows above) + 95 inherited +
 | Screenshot: test run, no database (2026-06-10 18:24) | 219 run / 0 failures / 7 honest skips, BUILD SUCCESS |
 | Screenshot: test run, `-Ptest-h2` (2026-06-10 18:25) | 244 run / 0 failures / 0 skipped, BUILD SUCCESS |
 | Screenshot: fixture + test tree (2026-06-10 18:37) | the `AnalyticsFixture` data and the `*Spec.java` tree beside the green run |
-| Surefire reports `target/surefire-reports` | the R1/R2/R3 runs transcribed above |
+| Surefire reports (regenerated under `target/surefire-reports` by the run commands above — build output, not committed) | the R1/R2/R3 runs transcribed above |
 
 These are the code-freeze captures, taken on the stated environment per
 [CAPTURE_ENVIRONMENT.md](CAPTURE_ENVIRONMENT.md).
