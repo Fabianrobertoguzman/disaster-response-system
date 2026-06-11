@@ -67,6 +67,11 @@ core, §2.5 security, and the two new features (f1 live board, f2 analytics).
 - **f1 server-push** is deliberately not built: the committed Live Board baseline
   is client-side polling (a server-stamped snapshot per poll); push would be
   gold-plating on a separate notification thread.
+- **GPS capture is simulated.** `GpsCoordinate.captureCurrentLocation()` returns
+  a fixed sample coordinate, and the report view labels it "simulated location"
+  (the Refresh button re-reads the stub). A real device-GPS read needs a
+  platform location service that a desktop JavaFX client does not have; the
+  captured coordinate is still recorded and persisted per FR-02.
 
 ## Reuse disposition
 

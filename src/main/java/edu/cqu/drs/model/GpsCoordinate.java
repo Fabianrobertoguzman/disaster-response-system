@@ -7,8 +7,8 @@ import java.io.Serializable;
  *
  * <p>Realises part of Assessment One's FR-02 ("record the GPS coordinates ... of every
  * submitted incident report"). The prototype's {@link #captureCurrentLocation()} returns a
- * fixed Rockhampton coordinate  -  a stub standing in for a real device-GPS read, which is a
- * Stage-3 integration item.</p>
+ * fixed Rockhampton coordinate  -  a deliberate simulation: a desktop client has no device
+ * GPS, so the fix is stubbed and clearly labelled "simulated location" in the report view.</p>
  *
  * @author Fabian Roberto Guzman (12287570)
  */
@@ -78,7 +78,9 @@ public final class GpsCoordinate implements Serializable {
      * @return a {@link GpsCoordinate} representing the device's location (stubbed).
      */
     public static GpsCoordinate captureCurrentLocation() {
-        // TODO A3: replace with a real device-GPS read via the platform location service.
+        // Deliberately simulated: a real device-GPS read needs a platform location
+        // service that a desktop JavaFX client does not have; the UI labels the fix
+        // as simulated and the Refresh action re-reads this stub.
         return new GpsCoordinate(STUB_LATITUDE, STUB_LONGITUDE);
     }
 
